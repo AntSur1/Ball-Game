@@ -1,4 +1,5 @@
 import pygame
+from functions import *
 from config import *
 
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
@@ -15,7 +16,6 @@ class Crosshair(object):
         self.middle_space_x = 3
         self.middle_space_y = 7
         self.color = LIGHT_GRAY
-     
 
     def draw_self(self):
         # Draw top, bottom, left and right lines 
@@ -26,7 +26,6 @@ class Crosshair(object):
         pygame.draw.rect(screen, self.color, (self.x - self.middle_space_y - self.middle_space_x, self.y + self.middle_space_x, self.height, self.width))
 
         pygame.draw.rect(screen, self.color, (self.x + self.middle_space_y - self.middle_space_x, self.y + self.middle_space_x, self.height, self.width))
-    
 
     def movement(self, coordinates: tuple):
         self.x, self.y = coordinates
@@ -40,7 +39,6 @@ class Dot(object):
         self.x, self.y = coordinates
         self.r = radius
         self.color = color
-
 
     def draw_self(self):
         pygame.draw.circle(screen, self.color, (self.x, self.y), self.r)
@@ -59,7 +57,6 @@ class Player(Dot):
         self.vy = 0
         self.friction = 0.13
     
-
     def movement(self, key):
         if key[pygame.K_w]:
             self.vy -= self.speed
@@ -70,15 +67,15 @@ class Player(Dot):
         if key[pygame.K_d]:
             self.vx += self.speed
 
-        # Apply friction
+        # Apply friction.
         self.vx *= (1 - self.friction)
         self.vy *= (1 - self.friction)
 
-        # Update position based on velocity
+        # Update position based on velocity.
         new_x = self.x + self.vx
         new_y = self.y + self.vy
 
-        # Check if new position is outside the screen
+        # Check if new position is outside the screen.
         if new_x < self.r:
             new_x = self.r
             self.vx = 0
@@ -95,25 +92,46 @@ class Player(Dot):
             new_y = SCREEN_HEIGHT - self.r
             self.vy = 0
 
-        # Set new coordinates
+        # Set new coordinates.
         self.x = new_x
         self.y = new_y
-        
-        
+
+
 class Bullet(object):
     """
     Shootable bullet.
     """
-    def __init__(self, coordinates: tuple, rotation: float):
+    def __init__(self, coordinates: tuple = (0, 0), target_coordinates: tuple = (0, 0)):
         self.x, self.y = coordinates
+        self.tx, self.ty = target_coordinates
         self.width = 5
+        self.height = self.width
         self.color = YELLOW
-        self.rotation = rotation
-    
+        self.spawn_angle = calculate_angle(coordinates, target_coordinates)  # Different from bullet_angle for some reason.
+        self.speed = 5
+        self.bullet_angle = math.atan2(self.ty - self.y, self.tx - self.x)
+
+        # Spawn a new bullet.
+        self.surface = pygame.Surface((self.width, self.height))
+        self.surface.set_colorkey((0, 0, 0))
+        self.surface.fill(self.color)
+        self.rect = self.surface.get_rect()
+
+        # Rotate the bullet.
+        old_center = self.rect.center
+        self.new = pygame.transform.rotate(self.surface, self.spawn_angle)
+        self.rect = self.new.get_rect()
+        self.rect.center = old_center
+
+    def update(self):
+        # Move bullet based on its rotation.
+        self.x += math.cos(self.bullet_angle) * self.speed
+        self.y += math.sin(self.bullet_angle) * self.speed
 
     def draw_self(self):
-        pygame.draw.rect(screen, self.color, (self.x, self.y, self.width, self.width))
+        # Redraw bullet.
+        self.surface.fill(self.color)
+        self.rect = self.surface.get_rect()
+        self.rect.center = (self.x, self.y)
 
-
-    def movement(self):
-        pass
+        screen.blit(self.new, self.rect)

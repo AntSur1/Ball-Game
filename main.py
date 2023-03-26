@@ -10,30 +10,30 @@ pygame.mouse.set_visible(False)
 
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 
-# Functions
+enemyList = []
+bulletList = []
+player = None
+crosshair = None
+
+
 def init():
     global player, crosshair
     pygame.mouse.set_pos(MIDDLE_OF_SCREEN)
 
     player = Player(MIDDLE_OF_SCREEN, 15, GREEN)
     crosshair = Crosshair(MIDDLE_OF_SCREEN)
-    
 
 
 def game_cursor():
     mouse_coords = pygame.mouse.get_pos()
-    crosshair.movement((mouse_coords))
+    crosshair.movement(mouse_coords)
 
 
 def spawn_bullet(player_coords: tuple, crosshair_coords:tuple):
-    pass
+    bulletList.append(Bullet(player_coords, crosshair_coords))
+  
 
 
-# Other
-enemyList = []
-bulletList = []
-player = None
-crosshair = None    
 
 # ========== Start ========== #
 init()
@@ -42,18 +42,19 @@ init()
 # Main game loop
 appRunning = True
 while appRunning:
-    screen.fill(BACKGROUND)
+    screen.fill(BACKGROUND_COLOR)
     game_cursor()
 
     # Update entities
-    player.draw_self()
-    crosshair.draw_self()
-
     for entity in enemyList:
         entity.draw_self()
 
     for bullet in bulletList:
+        bullet.update()
         bullet.draw_self()
+
+    player.draw_self()
+    crosshair.draw_self()
 
 
     # Player movement
@@ -63,13 +64,22 @@ while appRunning:
 
     # Detect pygame events.
     for event in pygame.event.get():
-       
+
         if event.type == pygame.QUIT:
             appRunning = False
 
         if event.type == pygame.KEYDOWN:
             if event.key in [pygame.K_DELETE, pygame.K_ESCAPE]:
                 appRunning = False
+            
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            mouse_presses = pygame.mouse.get_pressed()
+            if mouse_presses[0]:
+                player_coordinates = (player.x, player.y)
+                crosshair_coordinates = (crosshair.x, crosshair.y)
+                spawn_bullet(player_coordinates, crosshair_coordinates)
+
+    
 
     # Update screen
     pygame.display.flip()
