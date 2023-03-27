@@ -135,3 +135,22 @@ class Bullet(object):
         self.rect.center = (self.x, self.y)
 
         screen.blit(self.new, self.rect)
+
+
+class Enemy_walker(Dot):
+    """
+    Spawns a walker enemy.
+    """
+    def __init__(self, coordinates: tuple = (0, 0)):
+        super().__init__(coordinates)
+        self.r = 5
+        self.color = RED
+        self.speed = 1.3
+
+    def movement(self, player_coordinates):
+        x, y = player_coordinates
+        dx = x - self.x
+        dy = y - self.y
+        distance = math.sqrt(dx ** 2 + dy ** 2)
+        self.x += dx / distance * self.speed * 2.3
+        self.y += dy / distance * self.speed * 2.3

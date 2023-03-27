@@ -46,8 +46,10 @@ while appRunning:
     game_cursor()
 
     # Update entities
-    for entity in enemyList:
-        entity.draw_self()
+    for enemy in enemyList:
+        player_coordinates = (player.x, player.y)
+        enemy.movement(player_coordinates)
+        enemy.draw_self()
 
     for bullet in bulletList:
         bullet.update()
@@ -71,6 +73,10 @@ while appRunning:
         if event.type == pygame.KEYDOWN:
             if event.key in [pygame.K_DELETE, pygame.K_ESCAPE]:
                 appRunning = False
+            
+            # DEBUG
+            if event.key == pygame.K_b:
+                enemyList.append(Enemy_walker((0, 0)))
             
         if event.type == pygame.MOUSEBUTTONDOWN:
             mouse_presses = pygame.mouse.get_pressed()
