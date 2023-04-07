@@ -143,7 +143,7 @@ class Enemy_walker(Dot):
     """
     def __init__(self, coordinates: tuple = (0, 0)):
         super().__init__(coordinates)
-        self.r = 5
+        self.r = 10
         self.color = RED
         self.speed = 1.3
 
