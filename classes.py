@@ -6,9 +6,9 @@ screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 
 # Classes
 class Crosshair(object):
-    """
-    Movable croshair.
-    """
+    '''
+    Creates a movable croshair.
+    '''
     def __init__(self, coordinates: tuple = (0, 0)):
         self.x, self.y = coordinates
         self.width = 2
@@ -32,9 +32,9 @@ class Crosshair(object):
 
 
 class Dot(object):
-    """
+    '''
     Base entity texture.
-    """
+    '''
     def __init__(self, coordinates: tuple = (0, 0), radius: int = 0, color: int = BLACK):
         self.x, self.y = coordinates
         self.r = radius
@@ -45,9 +45,9 @@ class Dot(object):
 
 
 class Player(Dot):
-    """
+    '''
     Child of Dot. Is the playable character.
-    """
+    '''
     def __init__(self, coordinates: tuple = (0, 0), radius: int = 0, color: int = BLACK):
         super().__init__(coordinates, radius, color)
         # ! Who said stolen code ;)
@@ -98,9 +98,9 @@ class Player(Dot):
 
 
 class Bullet(object):
-    """
-    Shootable bullet.
-    """
+    '''
+    Creates a shootable bullet.
+    '''
     def __init__(self, coordinates: tuple = (0, 0), target_coordinates: tuple = (0, 0)):
         self.x, self.y = coordinates
         self.tx, self.ty = target_coordinates
@@ -138,9 +138,9 @@ class Bullet(object):
 
 
 class Enemy_walker(Dot):
-    """
-    Spawns a walker enemy.
-    """
+    '''
+    Creates a walker enemy.
+    '''
     def __init__(self, coordinates: tuple = (0, 0)):
         super().__init__(coordinates)
         self.r = 10
@@ -154,3 +154,33 @@ class Enemy_walker(Dot):
         distance = math.sqrt(dx ** 2 + dy ** 2)
         self.x += dx / distance * self.speed * 2.3
         self.y += dy / distance * self.speed * 2.3
+
+
+class Enemy_class1(Dot):
+    '''
+    Creates a class 1 enemy.
+    '''
+    def __init__(self, coordinates: tuple):
+        super().__init__(coordinates)
+        self.r = 10
+        self.color = PURPLE
+        self.speed = 1
+        self.vx = 1
+        self.vy = 0
+
+    def movement(self):
+        self.x += self.speed * self.vx
+        self.y += self.speed * self.vy
+        pixelColor = screen.get_at((self.x, self.y))
+
+        if pixelColor == GO_UP_COLOR:
+            self.vy == 1
+
+        if pixelColor == 0:  #go down
+            self.vy == -1
+
+        if pixelColor == GO_UP_COLOR:  # go left
+            self.vx == 0
+
+        if pixelColor == GO_UP_COLOR:  # go right
+            self.vx == -0

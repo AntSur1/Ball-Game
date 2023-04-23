@@ -2,9 +2,9 @@ import math
 
 # Functions
 def calculate_angle(coordinates1: tuple, coordinates2: tuple) -> float:
-    """
+    '''
     Calculates the angle between two points in degrees.
-    """
+    '''
     x1, y1 = coordinates1
     x2, y2 = coordinates2
     try:
@@ -12,5 +12,5 @@ def calculate_angle(coordinates1: tuple, coordinates2: tuple) -> float:
     except:
         angle = 0
 
-    rotation =  360 - math.degrees(angle)
+    rotation = 360 - math.degrees(angle)
     return rotation

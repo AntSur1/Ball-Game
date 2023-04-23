@@ -11,4 +11,15 @@ GREEN = 0, 255, 0
 BLUE = 0, 0, 255
 LIGHT_GRAY = 192, 192, 192
 YELLOW = 255, 255, 0
+PURPLE = 155, 63, 204
 BACKGROUND_COLOR = 5, 5, 10
+
+# Game
+MAX_OUT_OF_BOUNDS_PX = 20
+
+SPAWN_COLOR = 255, 242, 0
+GO_UP_COLOR = 14, 209, 69
+
+GAME_MAP_CONFIG = "maps/game-map-config.png"
+GAME_MAP_FILE = "maps/game-map.png"
+
