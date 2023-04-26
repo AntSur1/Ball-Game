@@ -17,7 +17,7 @@ enemyList = []
 bulletList = []
 player = None
 crosshair = None
-spawnDirection = [0, 0]  # What axis the enemies will go towards: [x, y]
+spawnDirection = [0, 0]  # How enemy coordinates will change at spawn: [x, y]
 
 
 def init() -> None:
@@ -29,7 +29,7 @@ def init() -> None:
     crosshair = Crosshair(MIDDLE_OF_SCREEN)
 
     screen.blit(gameMapConfig,(0,0))
-    startCoordinates = find_spawn_point()
+    startCoordinates = prepare_enemy_spawn()
     print(startCoordinates)
 
 
@@ -96,8 +96,9 @@ def out_of_bounds_check(x: int, y: int) -> bool:
     return False
 
 
-def find_spawn_point() -> tuple:
-    ''' Finds the coordinates for the enemy spawn point.'''
+def prepare_enemy_spawn() -> list:
+    ''' Finds the coordinates for the enemy spawn point, and globally sets the direction for enemy attack.
+    '''
     global spawnDirection
     x = 0
     y = 0
