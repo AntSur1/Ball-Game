@@ -160,18 +160,23 @@ class Enemy_class1(Dot):
     '''
     Creates a class 1 enemy.
     '''
-    def __init__(self, coordinates: tuple):
+    def __init__(self, coordinates: tuple, spawnDirections: list):
         super().__init__(coordinates)
         self.r = 10
         self.color = PURPLE
         self.speed = 1
         self.vx = 1
         self.vy = 0
+        self.spawnDirection = spawnDirections
 
     def movement(self):
         self.x += self.speed * self.vx
         self.y += self.speed * self.vy
-        pixelColor = screen.get_at((self.x, self.y))
+        
+        if self.x > 0 and self.x < SCREEN_WIDTH and self.y > 0 and self.y < SCREEN_HEIGHT:
+            pixelColor = screen.get_at((self.x, self.y))
+        else:
+            pixelColor = (0, 0, 0)
 
         if pixelColor == GO_UP_COLOR:
             self.vy == 1

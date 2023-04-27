@@ -17,20 +17,122 @@ enemyList = []
 bulletList = []
 player = None
 crosshair = None
-spawnDirection = [0, 0]  # How enemy coordinates will change at spawn: [x, y]
+mapData = []  # [[(spawnCoordinates), [spawnDirection]], [upCoordinates] [downCoordinates] [leftCoordinates] [rightCoordinates]]
 
+
+debugMap = False
 
 def init() -> None:
-    ''' Initializes player and mouse coorinates, and finds enemy spawnpoint.'''
-    global player, crosshair
+    ''' Initializes player and mouse coorinates, and reads map config.'''
+    global player, crosshair, mapData
     pygame.mouse.set_pos(MIDDLE_OF_SCREEN)
 
     player = Player(MIDDLE_OF_SCREEN, 15, GREEN)
     crosshair = Crosshair(MIDDLE_OF_SCREEN)
 
-    screen.blit(gameMapConfig,(0,0))
-    startCoordinates = prepare_enemy_spawn()
-    print(startCoordinates)
+    mapData = read_map_data()
+    print(mapData)
+
+
+def find_enemy_spawn() -> list:
+    ''' 
+    Returns the coordinates for the enemy spawn point and the direction for enemy attack.
+    '''
+    data = []
+
+    x = 0
+    y = 0
+    
+    for width in range(SCREEN_WIDTH-1):
+        pixelColor = screen.get_at((x, y))
+
+        if pixelColor == SPAWN_COLOR:
+            spawnCoordinates = (x, y - 15)
+            spawnDirection = [0, 1]
+            break
+
+        else:
+            x += 1
+
+    for height in range(SCREEN_HEIGHT-1):
+        pixelColor = screen.get_at((x, y))
+
+        if pixelColor == SPAWN_COLOR:
+            spawnCoordinates = (x + 15, y)
+            spawnDirection = [-1, 0]
+            break
+
+        else:
+            y += 1
+        
+    for width in range(SCREEN_WIDTH-1):
+        pixelColor = screen.get_at((x, y))
+
+        if pixelColor == SPAWN_COLOR:
+            spawnCoordinates = (x, y + 15)
+            spawnDirection = [0, -1]
+            break
+
+        else:
+            x -= 1
+
+    for height in range(SCREEN_HEIGHT-1):
+        pixelColor = screen.get_at((x, y))
+
+        if pixelColor == SPAWN_COLOR:
+            spawnCoordinates = (x - 15, y)
+            spawnDirection = [1, 0]
+            break
+
+        else:
+            y -= 1
+
+    data.append(spawnCoordinates)
+    data.append(spawnDirection)
+
+    return data
+
+
+def find_enemy_direction_change() -> list:
+    ''' Returns all coordinates with direction change data.'''
+    changeDirectionData = [[], [], [], []]  # [[up], [down], [left], [right]]
+
+    for y in range(SCREEN_HEIGHT):
+        for x in range(SCREEN_WIDTH):
+            coordinates = (x, y)
+
+            pixelColor = screen.get_at(coordinates)
+
+            if pixelColor == GO_UP_COLOR:
+                changeDirectionData[0].append(coordinates)
+
+            if pixelColor == GO_DOWN_COLOR:
+                changeDirectionData[1].append(coordinates)
+
+            if pixelColor == GO_LEFT_COLOR:
+                changeDirectionData[2].append(coordinates)
+
+            if pixelColor == GO_RIGHT_COLOR:
+                changeDirectionData[3].append(coordinates)
+                
+    return changeDirectionData
+
+
+def read_map_data() -> list:
+    ''' Reads map data and returns mapData content.'''
+
+    mapData = []
+
+    screen.blit(gameMapConfig, (0, 0))
+
+    spawnData = find_enemy_spawn()
+    directionData = find_enemy_direction_change()
+
+    mapData.append(spawnData)
+    mapData.append(directionData)
+
+    return mapData
+    
 
 
 def cursor_movement() -> None:
@@ -52,7 +154,7 @@ def get_distance(x1: int, y1: int, x2: int, y2: int) -> float:
 
 def random_enemy_spawn_coordinates() -> tuple:
     ''' Spawns an enemy at a random set of coordinates outside of the screen.'''
-    side = random.randint(0,3)
+    side = random.randint(0, 3)
 
     if side == 0:
         x = -20
@@ -96,76 +198,24 @@ def out_of_bounds_check(x: int, y: int) -> bool:
     return False
 
 
-def prepare_enemy_spawn() -> list:
-    ''' Finds the coordinates for the enemy spawn point, and globally sets the direction for enemy attack.
-    '''
-    global spawnDirection
-    x = 0
-    y = 0
-
-    startCoordinate = 0
-    
-    for width in range(SCREEN_WIDTH-1):
-        pixelColor = screen.get_at((x, y))
-
-        if pixelColor == SPAWN_COLOR:
-            startCoordinate = (x, y - 15)
-            spawnDirection = [0, 1]
-            break
-
-        else:
-            x += 1
-
-    for height in range(SCREEN_HEIGHT-1):
-        pixelColor = screen.get_at((x, y))
-
-        if pixelColor == SPAWN_COLOR:
-            startCoordinate = (x + 15, y)
-            spawnDirection = [-1, 0]
-            break
-
-        else:
-            y += 1
-        
-    for width in range(SCREEN_WIDTH-1):
-        pixelColor = screen.get_at((x, y))
-
-        if pixelColor == SPAWN_COLOR:
-            startCoordinate = (x, y + 15)
-            spawnDirection = [0, -1]
-            break
-
-        else:
-            x -= 1
-
-    for height in range(SCREEN_HEIGHT-1):
-        pixelColor = screen.get_at((x, y))
-
-        if pixelColor == SPAWN_COLOR:
-            startCoordinate = (x - 15, y)
-            spawnDirection = [1, 0]
-            break
-
-        else:
-            y -= 1
-
-    return startCoordinate
-
-
 # ========== Start ========== #
 init()
 
 # Main game loop
 appRunning = True
 while appRunning:
-    screen.blit(gameMap,(0,0))
+    if debugMap:
+        screen.fill((0, 0, 0))
+        screen.blit(gameMapConfig,(0,0))
+    else:
+        screen.blit(gameMap,(0,0))
+
     cursor_movement()
     check_bullet_hit()
 
     # Update and draw screen.
     for enemy in enemyList:
-        player_coordinates = (player.x, player.y)
-        enemy.movement(player_coordinates)
+        enemy.movement()
         enemy.draw_self()
 
     for bullet in bulletList:
@@ -196,9 +246,11 @@ while appRunning:
                 appRunning = False
             
             # DEBUG
-            if event.key == pygame.K_b:
-                coordinates = random_enemy_spawn_coordinates()
-                enemyList.append(Enemy_class1(coordinates))
+            if event.key == pygame.K_1:
+                enemyList.append(Enemy_class1(mapData[0], spawnDirection))
+
+            if event.key == pygame.K_p:
+                debugMap = not debugMap
 
         if event.type == pygame.MOUSEBUTTONDOWN:
             mouse_presses = pygame.mouse.get_pressed()

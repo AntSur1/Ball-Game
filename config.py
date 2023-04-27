@@ -19,6 +19,9 @@ MAX_OUT_OF_BOUNDS_PX = 20
 
 SPAWN_COLOR = 255, 242, 0
 GO_UP_COLOR = 14, 209, 69
+GO_DOWN_COLOR = 1, 1, 1
+GO_LEFT_COLOR = 1, 1, 1
+GO_RIGHT_COLOR = 1, 1, 1
 
 GAME_MAP_CONFIG = "maps/game-map-config.png"
 GAME_MAP_FILE = "maps/game-map.png"
