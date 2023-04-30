@@ -157,35 +157,21 @@ class Enemy_walker(Dot):
 
 
 class Enemy_class1(Dot):
-    '''
-    Creates a class 1 enemy.
-    '''
-    def __init__(self, coordinates: tuple, spawnDirections: list):
+    '''  Creates a class 1 enemy.'''
+    def __init__(self, coordinates: tuple, spawnDirection: list):
         super().__init__(coordinates)
         self.r = 10
         self.color = PURPLE
         self.speed = 1
-        self.vx = 1
+        self.vx = 0
         self.vy = 0
-        self.spawnDirection = spawnDirections
+        self.moveDirection = spawnDirection
 
     def movement(self):
+        self.vx = self.moveDirection[0]
+        self.vy = self.moveDirection[1]
+
         self.x += self.speed * self.vx
         self.y += self.speed * self.vy
         
-        if self.x > 0 and self.x < SCREEN_WIDTH and self.y > 0 and self.y < SCREEN_HEIGHT:
-            pixelColor = screen.get_at((self.x, self.y))
-        else:
-            pixelColor = (0, 0, 0)
-
-        if pixelColor == GO_UP_COLOR:
-            self.vy == 1
-
-        if pixelColor == 0:  #go down
-            self.vy == -1
-
-        if pixelColor == GO_UP_COLOR:  # go left
-            self.vx == 0
-
-        if pixelColor == GO_UP_COLOR:  # go right
-            self.vx == -0
+        

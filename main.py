@@ -17,7 +17,8 @@ enemyList = []
 bulletList = []
 player = None
 crosshair = None
-mapData = []  # [[(spawnCoordinates), [spawnDirection]], [upCoordinates] [downCoordinates] [leftCoordinates] [rightCoordinates]]
+mapData = []  # [[(spawnCoordinates), [spawnDirection]], [directionPoint], [directionPoint]...]
+mapDirectionPoints = [[0, -1], [0, 1], [-1, 0], [1, 0]]  # U, D, L, R
 
 
 debugMap = False
@@ -48,7 +49,7 @@ def find_enemy_spawn() -> list:
 
         if pixelColor == SPAWN_COLOR:
             spawnCoordinates = (x, y - 15)
-            spawnDirection = [0, 1]
+            spawnDirection = mapDirectionPoints[1]
             break
 
         else:
@@ -59,7 +60,7 @@ def find_enemy_spawn() -> list:
 
         if pixelColor == SPAWN_COLOR:
             spawnCoordinates = (x + 15, y)
-            spawnDirection = [-1, 0]
+            spawnDirection = mapDirectionPoints[2]
             break
 
         else:
@@ -70,7 +71,7 @@ def find_enemy_spawn() -> list:
 
         if pixelColor == SPAWN_COLOR:
             spawnCoordinates = (x, y + 15)
-            spawnDirection = [0, -1]
+            spawnDirection = mapDirectionPoints[0]
             break
 
         else:
@@ -81,7 +82,7 @@ def find_enemy_spawn() -> list:
 
         if pixelColor == SPAWN_COLOR:
             spawnCoordinates = (x - 15, y)
-            spawnDirection = [1, 0]
+            spawnDirection = mapDirectionPoints[3]
             break
 
         else:
@@ -132,7 +133,6 @@ def read_map_data() -> list:
     mapData.append(directionData)
 
     return mapData
-    
 
 
 def cursor_movement() -> None:
@@ -207,6 +207,7 @@ while appRunning:
     if debugMap:
         screen.fill((0, 0, 0))
         screen.blit(gameMapConfig,(0,0))
+
     else:
         screen.blit(gameMap,(0,0))
 
@@ -215,6 +216,24 @@ while appRunning:
 
     # Update and draw screen.
     for enemy in enemyList:
+        for directionPoints in mapData[1]:
+            
+            print()
+            print("mapData:", mapData)
+            print("mapData[1]:", mapData[1])
+            print("mapData[1][0]:", mapData[1][0])
+
+            for point in directionPoints:
+                print("directionPoints", directionPoints)
+                print("point", point)
+
+
+                distance = get_distance(enemy.x, enemy.y, point[0], point[1])
+                if distance < enemy.r/2:
+                    enemy.moveDirection = mapDirectionPoints[0]
+                    break
+
+
         enemy.movement()
         enemy.draw_self()
 
@@ -247,8 +266,8 @@ while appRunning:
             
             # DEBUG
             if event.key == pygame.K_1:
-                enemyList.append(Enemy_class1(mapData[0], spawnDirection))
-
+                enemyList.append(Enemy_class1(mapData[0][0], mapData[0][1]))
+                
             if event.key == pygame.K_p:
                 debugMap = not debugMap
 
