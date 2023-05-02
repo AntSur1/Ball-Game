@@ -20,8 +20,7 @@ crosshair = None
 mapData = []  # [[(spawnCoordinates), [spawnDirection]], [directionPoint], [directionPoint]...]
 mapDirectionPoints = [[0, -1], [0, 1], [-1, 0], [1, 0]]  # U, D, L, R
 
-
-debugMap = False
+isDebugModeActive = False
 
 def init() -> None:
     ''' Initializes player and mouse coorinates, and reads map config.'''
@@ -204,7 +203,7 @@ init()
 # Main game loop
 appRunning = True
 while appRunning:
-    if debugMap:
+    if isDebugModeActive:
         screen.fill((0, 0, 0))
         screen.blit(gameMapConfig,(0,0))
 
@@ -218,14 +217,16 @@ while appRunning:
     for enemy in enemyList:
         for directionPoints in mapData[1]:
             
-            print()
-            print("mapData:", mapData)
-            print("mapData[1]:", mapData[1])
-            print("mapData[1][0]:", mapData[1][0])
+            if isDebugModeActive:
+                print()
+                print("mapData:", mapData)
+                print("mapData[1]:", mapData[1])
+                print("mapData[1][0]:", mapData[1][0])
 
             for point in directionPoints:
-                print("directionPoints", directionPoints)
-                print("point", point)
+                if isDebugModeActive:
+                    print("directionPoints", directionPoints)
+                    print("point", point)
 
 
                 distance = get_distance(enemy.x, enemy.y, point[0], point[1])
@@ -269,7 +270,7 @@ while appRunning:
                 enemyList.append(Enemy_class1(mapData[0][0], mapData[0][1]))
                 
             if event.key == pygame.K_p:
-                debugMap = not debugMap
+                isDebugModeActive = not isDebugModeActive
 
         if event.type == pygame.MOUSEBUTTONDOWN:
             mouse_presses = pygame.mouse.get_pressed()
