@@ -50,7 +50,7 @@ class Player(Dot):
     '''
     def __init__(self, coordinates: tuple = (0, 0), radius: int = 0, color: int = BLACK):
         super().__init__(coordinates, radius, color)
-        # ! Who said stolen code ;)
+        #! Who said something about stolen code ;)
         # Base speed factors
         self.speed = 1.3
         self.vx = 0
@@ -105,6 +105,7 @@ class Bullet(object):
         self.x, self.y = coordinates
         self.tx, self.ty = target_coordinates
         self.width = 5
+        self.piersePoints = 10
         self.height = self.width
         self.color = YELLOW
         self.spawn_angle = calculate_angle(coordinates, target_coordinates)  # Different from bullet_angle for some reason.

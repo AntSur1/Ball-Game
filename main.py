@@ -1,7 +1,7 @@
 import pygame
 import this
 print("\n")
-import random
+from random import randint 
 from config import *
 from classes import *
 
@@ -153,22 +153,22 @@ def get_distance(x1: int, y1: int, x2: int, y2: int) -> float:
 
 def random_enemy_spawn_coordinates() -> tuple:
     ''' Spawns an enemy at a random set of coordinates outside of the screen.'''
-    side = random.randint(0, 3)
+    side = randint(0, 3)
 
     if side == 0:
         x = -20
-        y = random.randint(0, SCREEN_HEIGHT)
+        y = randint(0, SCREEN_HEIGHT)
         
     if side == 1:
         x = SCREEN_WIDTH + 20
-        y = random.randint(0, SCREEN_HEIGHT)
+        y = randint(0, SCREEN_HEIGHT)
 
     if side == 2:
-        x = random.randint(0, SCREEN_WIDTH)
+        x = randint(0, SCREEN_WIDTH)
         y = -20
         
     if side == 3:
-        x = random.randint(0, SCREEN_WIDTH)
+        x = randint(0, SCREEN_WIDTH)
         y = SCREEN_HEIGHT + 20
 
     return (x, y)
