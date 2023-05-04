@@ -23,7 +23,9 @@ mapDirectionPoints = [[0, -1], [0, 1], [-1, 0], [1, 0]]  # U, D, L, R
 isDebugModeActive = False
 
 def init() -> None:
-    ''' Initializes player and mouse coorinates, and reads map config.'''
+    '''
+    Initializes player and mouse coorinates, and reads map config.
+    '''
     global player, crosshair, mapData
     pygame.mouse.set_pos(MIDDLE_OF_SCREEN)
 
@@ -94,7 +96,9 @@ def find_enemy_spawn() -> list:
 
 
 def find_enemy_direction_change() -> list:
-    ''' Returns all coordinates with direction change data.'''
+    '''
+    Returns all coordinates with direction change data.
+    '''
     changeDirectionData = [[], [], [], []]  # [[up], [down], [left], [right]]
 
     for y in range(SCREEN_HEIGHT):
@@ -119,8 +123,9 @@ def find_enemy_direction_change() -> list:
 
 
 def read_map_data() -> list:
-    ''' Reads map data and returns mapData content.'''
-
+    '''
+    Reads map data and returns mapData content.
+    '''
     mapData = []
 
     screen.blit(gameMapConfig, (0, 0))
@@ -135,7 +140,9 @@ def read_map_data() -> list:
 
 
 def cursor_movement() -> None:
-    ''' Moves the player crosshair to the mouse coordinates.'''
+    '''
+    Moves the player crosshair to the mouse coordinates.
+    '''
     mouse_coords = pygame.mouse.get_pos()
     crosshair.movement(mouse_coords)
 
@@ -152,7 +159,9 @@ def get_distance(x1: int, y1: int, x2: int, y2: int) -> float:
 
 
 def random_enemy_spawn_coordinates() -> tuple:
-    ''' Spawns an enemy at a random set of coordinates outside of the screen.'''
+    '''
+    Spawns an enemy at a random set of coordinates outside of the screen.
+    '''
     side = randint(0, 3)
 
     if side == 0:
@@ -271,6 +280,10 @@ while appRunning:
                 
             if event.key == pygame.K_p:
                 isDebugModeActive = not isDebugModeActive
+
+            #DEBUG
+
+            
 
         if event.type == pygame.MOUSEBUTTONDOWN:
             mouse_presses = pygame.mouse.get_pressed()

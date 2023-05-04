@@ -46,7 +46,7 @@ class Dot(object):
 
 class Player(Dot):
     '''
-    Child of Dot. Is the playable character.
+    Playable character.
     '''
     def __init__(self, coordinates: tuple = (0, 0), radius: int = 0, color: int = BLACK):
         super().__init__(coordinates, radius, color)
@@ -101,11 +101,11 @@ class Bullet(object):
     '''
     Creates a shootable bullet.
     '''
-    def __init__(self, coordinates: tuple = (0, 0), target_coordinates: tuple = (0, 0)):
+    def __init__(self, coordinates: tuple = (0, 0), target_coordinates: tuple = (0, 0), piersePoints: int = 1):
         self.x, self.y = coordinates
         self.tx, self.ty = target_coordinates
+        self.piersePoints = piersePoints
         self.width = 5
-        self.piersePoints = 10
         self.height = self.width
         self.color = YELLOW
         self.spawn_angle = calculate_angle(coordinates, target_coordinates)  # Different from bullet_angle for some reason.
@@ -158,7 +158,9 @@ class Enemy_walker(Dot):
 
 
 class Enemy_class1(Dot):
-    '''  Creates a class 1 enemy.'''
+    '''
+    Creates a class 1 enemy.
+    '''
     def __init__(self, coordinates: tuple, spawnDirection: list):
         super().__init__(coordinates)
         self.r = 10
