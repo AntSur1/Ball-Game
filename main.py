@@ -37,8 +37,8 @@ def init() -> None:
 
 
 def find_enemy_spawn() -> list:
-    ''' 
-    Returns the coordinates for the enemy spawn point and the direction for enemy attack.
+    '''
+    Returns the coordinates for the enemy spawn point and the direction for enemy attack. \n Returns: [(spawnCoordinates), (spawnDirection)]
     '''
     data = []
 
@@ -121,6 +121,7 @@ def find_enemy_direction_change() -> list:
                 
     return changeDirectionData
 
+# TODO Bullet penetration and enemy hp
 
 def read_map_data() -> list:
     '''
@@ -226,16 +227,16 @@ while appRunning:
     for enemy in enemyList:
         for directionPoints in mapData[1]:
             
-            if isDebugModeActive:
-                print()
-                print("mapData:", mapData)
-                print("mapData[1]:", mapData[1])
-                print("mapData[1][0]:", mapData[1][0])
+            # if isDebugModeActive:
+            #     print()
+            #     print("mapData:", mapData)
+            #     print("mapData[1]:", mapData[1])
+            #     print("mapData[1][0]:", mapData[1][0])
 
             for point in directionPoints:
-                if isDebugModeActive:
-                    print("directionPoints", directionPoints)
-                    print("point", point)
+                # if isDebugModeActive:
+                #     print("directionPoints", directionPoints)
+                #     print("point", point)
 
 
                 distance = get_distance(enemy.x, enemy.y, point[0], point[1])
@@ -243,9 +244,12 @@ while appRunning:
                     enemy.moveDirection = mapDirectionPoints[0]
                     break
 
+        if out_of_bounds_check(enemy.x, enemy.y):
+            enemyList.remove(enemy)
 
         enemy.movement()
         enemy.draw_self()
+
 
     for bullet in bulletList:
         bullet.update()
@@ -254,7 +258,6 @@ while appRunning:
         if out_of_bounds_check(bullet.x, bullet.y):
             bulletList.remove(bullet)
         
-
     player.draw_self()
     crosshair.draw_self()
 

@@ -1,8 +1,25 @@
 import pygame
-from functions import *
+import math
 from config import *
 
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+
+
+# Functions
+def calculate_angle(coordinates1: tuple, coordinates2: tuple) -> float:
+    '''
+    Calculates the angle between two points in degrees.
+    '''
+    x1, y1 = coordinates1
+    x2, y2 = coordinates2
+    try:
+        angle = math.atan((y2 - y1) / (x2 - x1))
+    except:
+        angle = 0
+
+    rotation = 360 - math.degrees(angle)
+    return rotation
+
 
 # Classes
 class Crosshair(object):
@@ -161,7 +178,7 @@ class Enemy_class1(Dot):
     '''
     Creates a class 1 enemy.
     '''
-    def __init__(self, coordinates: tuple, spawnDirection: list):
+    def __init__(self, coordinates: tuple, spawnDirection: list, hp: int = 1):
         super().__init__(coordinates)
         self.r = 10
         self.color = PURPLE
@@ -169,6 +186,7 @@ class Enemy_class1(Dot):
         self.vx = 0
         self.vy = 0
         self.moveDirection = spawnDirection
+        self.hp = hp
 
     def movement(self):
         self.vx = self.moveDirection[0]
