@@ -13,13 +13,16 @@ screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 gameMapConfig = pygame.image.load(GAME_MAP_CONFIG)
 gameMap = pygame.image.load(GAME_MAP_FILE)
 
-enemyList = []
-bulletList = []
+enemyList = [ ]
+bulletList = [ ]
+popFlashes = [ ]
+
 player = None
 crosshair = None
-mapData = []  # [[(spawnCoordinates), [spawnDirection]], [directionPoint], [directionPoint]...]
+mapData = [ ]  # [[(spawnCoordinates), [spawnDirection]], [directionPoint], [directionPoint]...]
 mapDirectionPoints = [[0, -1], [0, 1], [-1, 0], [1, 0]]  # U, D, L, R
 
+gameTick = 0
 isDebugModeActive = False
 
 def init() -> None:
@@ -121,7 +124,7 @@ def find_enemy_direction_change() -> list:
                 
     return changeDirectionData
 
-# TODO Bullet penetration and enemy hp
+# TODO ~Bullet~penetration~ and enemy hp
 
 def read_map_data() -> list:
     '''
@@ -189,12 +192,19 @@ def check_bullet_hit() -> None:
     for enemy in enemyList:
         for bullet in bulletList:
             distance = get_distance(enemy.x, enemy.y, bullet.x, bullet.y)
-            
+
+            # Hit and hit cooldown detection
             if distance < enemy.r:
-                enemyList.remove(enemy)
-                #? Should this here?  
-                # bulletList.remove(bullet)
-                # print("+1")
+                if not enemy.hitCooldown:
+                    enemy.hp -= 1
+                    enemy.hitCooldown = True
+                    popFlashes.append(Pop_Flash((bullet.x, bullet.y), gameTick))
+
+                if enemy.hp <= 0:
+                    enemyList.remove(enemy)
+
+            else:
+                enemy.hitCooldown = False
 
 
 def out_of_bounds_check(x: int, y: int) -> bool:
@@ -213,6 +223,8 @@ init()
 # Main game loop
 appRunning = True
 while appRunning:
+    gameTick += 1
+
     if isDebugModeActive:
         screen.fill((0, 0, 0))
         screen.blit(gameMapConfig,(0,0))
@@ -246,6 +258,7 @@ while appRunning:
 
         if out_of_bounds_check(enemy.x, enemy.y):
             enemyList.remove(enemy)
+            print("PlayerHp - 1")
 
         enemy.movement()
         enemy.draw_self()
@@ -258,6 +271,14 @@ while appRunning:
         if out_of_bounds_check(bullet.x, bullet.y):
             bulletList.remove(bullet)
         
+        
+    for popFlash in popFlashes:
+        popFlash.self_draw()
+        
+        if popFlash.destructionTime <= gameTick:
+            popFlashes.remove(popFlash)
+
+
     player.draw_self()
     crosshair.draw_self()
 

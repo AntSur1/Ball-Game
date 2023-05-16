@@ -155,6 +155,34 @@ class Bullet(object):
         screen.blit(self.new, self.rect)
 
 
+class Pop_Flash(object):
+    '''
+    Creates a shortlived enemy hit effect.
+    '''
+    def __init__(self, coordinates: tuple = (0, 0), currentTime: int = 0) -> None:
+        self.coordinates = coordinates
+        self.VISIBLE_TIME = 5
+        self.destructionTime = currentTime + self.VISIBLE_TIME
+        self.size = 5
+        self.indent = 3
+        self.points = (
+            (coordinates[0] - self.size, coordinates[1]),
+            (coordinates[0] - self.size / self.indent, coordinates[1] + self.size / self.indent),
+
+            (coordinates[0], coordinates[1] + self.size),
+            (coordinates[0] + self.size / self.indent, coordinates[1] + self.size / self.indent),
+
+            (coordinates[0] + self.size, coordinates[1]),
+            (coordinates[0] + self.size / self.indent, coordinates[1] - self.size / self.indent),
+            
+            (coordinates[0], coordinates[1] - self.size),
+            (coordinates[0] - self.size / self.indent, coordinates[1] - self.size / self.indent)
+        )
+    
+    def self_draw(self):
+        pygame.draw.polygon(screen, WHITE, self.points)
+
+
 class Enemy_walker(Dot):
     '''
     Creates a walker enemy.
@@ -178,7 +206,7 @@ class Enemy_class1(Dot):
     '''
     Creates a class 1 enemy.
     '''
-    def __init__(self, coordinates: tuple, spawnDirection: list, hp: int = 1):
+    def __init__(self, coordinates: tuple, spawnDirection: list, hp: int = 2):
         super().__init__(coordinates)
         self.r = 10
         self.color = PURPLE
@@ -187,6 +215,7 @@ class Enemy_class1(Dot):
         self.vy = 0
         self.moveDirection = spawnDirection
         self.hp = hp
+        self.hitCooldown = False
 
     def movement(self):
         self.vx = self.moveDirection[0]
