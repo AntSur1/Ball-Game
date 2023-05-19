@@ -118,10 +118,10 @@ class Bullet(object):
     '''
     Creates a shootable bullet.
     '''
-    def __init__(self, coordinates: tuple = (0, 0), target_coordinates: tuple = (0, 0), piersePoints: int = 1):
+    def __init__(self, coordinates: tuple = (0, 0), target_coordinates: tuple = (0, 0), hp: int = 1):
         self.x, self.y = coordinates
         self.tx, self.ty = target_coordinates
-        self.piersePoints = piersePoints
+        self.hp = hp
         self.width = 5
         self.height = self.width
         self.color = YELLOW
@@ -161,8 +161,8 @@ class Pop_Flash(object):
     '''
     def __init__(self, coordinates: tuple = (0, 0), currentTime: int = 0) -> None:
         self.coordinates = coordinates
-        self.VISIBLE_TIME = 5
-        self.destructionTime = currentTime + self.VISIBLE_TIME
+        self.visible_time = 5
+        self.destructionTime = currentTime + self.visible_time
         self.size = 5
         self.indent = 3
         self.points = (
@@ -202,26 +202,50 @@ class Enemy_walker(Dot):
         self.y += dy / distance * self.speed * 2.3
 
 
-class Enemy_class1(Dot):
+class Enemy(Dot):
     '''
-    Creates a class 1 enemy.
+    Creates a default enemy.
     '''
-    def __init__(self, coordinates: tuple, spawnDirection: list, hp: int = 2):
+    def __init__(self, coordinates: tuple, spawnDirection: list):
         super().__init__(coordinates)
-        self.r = 10
-        self.color = PURPLE
-        self.speed = 1
-        self.vx = 0
-        self.vy = 0
         self.moveDirection = spawnDirection
-        self.hp = hp
         self.hitCooldown = False
+        self.speed = 1
+        self.hp = 1
 
     def movement(self):
-        self.vx = self.moveDirection[0]
-        self.vy = self.moveDirection[1]
+        vx = self.moveDirection[0]
+        vy = self.moveDirection[1]
 
-        self.x += self.speed * self.vx
-        self.y += self.speed * self.vy
+        self.x += self.speed * vx
+        self.y += self.speed * vy
+
+    def draw_health_bar(self):
+        pygame.draw.rect(screen, BLACK, (
+            (self.x - 21, self.y - 2 * self.r - 1),
+            (42, 7)
+        ))
+        pygame.draw.rect(screen, GREEN, (
+            (self.x - 20, self.y - 2 * self.r),
+            (40, 5)
+        ))
         
         
+class Enemy1(Enemy):
+    def __init__(self, coordinates: tuple, spawnDirection: list):
+        super().__init__(coordinates, spawnDirection)
+        self.r = 10
+        self.color = PURPLE
+        self.moveDirection = spawnDirection
+        self.speed = 1
+        self.hp = 1
+
+
+class Enemy2(Enemy):
+    def __init__(self, coordinates: tuple, spawnDirection: list):
+        super().__init__(coordinates,  spawnDirection)
+        self.r = 15
+        self.color = BLUE
+        self.moveDirection = spawnDirection
+        self.speed = 0.6
+        self.hp = 3

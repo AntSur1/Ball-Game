@@ -1,7 +1,5 @@
 import pygame
-import this
-print("\n")
-from random import randint 
+from random import randint, randrange
 from config import *
 from classes import *
 
@@ -124,7 +122,7 @@ def find_enemy_direction_change() -> list:
                 
     return changeDirectionData
 
-# TODO ~Bullet~penetration~ and enemy hp
+
 
 def read_map_data() -> list:
     '''
@@ -153,7 +151,7 @@ def cursor_movement() -> None:
 
 def spawn_bullet(player_coords: tuple, crosshair_coords:tuple) -> None:
     ''' Creates a bullet at the player.'''
-    bulletList.append(Bullet(player_coords, crosshair_coords))
+    bulletList.append(Bullet(player_coords, crosshair_coords, 5))  # TODO change 5
 
 
 def get_distance(x1: int, y1: int, x2: int, y2: int) -> float:
@@ -197,11 +195,15 @@ def check_bullet_hit() -> None:
             if distance < enemy.r:
                 if not enemy.hitCooldown:
                     enemy.hp -= 1
+                    bullet.hp -= 1
                     enemy.hitCooldown = True
                     popFlashes.append(Pop_Flash((bullet.x, bullet.y), gameTick))
 
                 if enemy.hp <= 0:
                     enemyList.remove(enemy)
+                
+                if bullet.hp <= 0:
+                    bulletList.remove(bullet)
 
             else:
                 enemy.hitCooldown = False
@@ -227,15 +229,15 @@ while appRunning:
 
     if isDebugModeActive:
         screen.fill((0, 0, 0))
-        screen.blit(gameMapConfig,(0,0))
+        screen.blit(gameMapConfig, (0,0))
 
     else:
-        screen.blit(gameMap,(0,0))
+        screen.blit(gameMap, (0,0))
 
     cursor_movement()
     check_bullet_hit()
 
-    # Update and draw screen.
+    # Update and draw screen
     for enemy in enemyList:
         for directionPoints in mapData[1]:
             
@@ -252,7 +254,7 @@ while appRunning:
 
 
                 distance = get_distance(enemy.x, enemy.y, point[0], point[1])
-                if distance < enemy.r/2:
+                if distance < enemy.r / 2:
                     enemy.moveDirection = mapDirectionPoints[0]
                     break
 
@@ -262,8 +264,9 @@ while appRunning:
 
         enemy.movement()
         enemy.draw_self()
+        enemy.draw_health_bar()
 
-
+    # Draw bullets
     for bullet in bulletList:
         bullet.update()
         bullet.draw_self()
@@ -271,7 +274,7 @@ while appRunning:
         if out_of_bounds_check(bullet.x, bullet.y):
             bulletList.remove(bullet)
         
-        
+    # Draw pop flash
     for popFlash in popFlashes:
         popFlash.self_draw()
         
@@ -283,12 +286,12 @@ while appRunning:
     crosshair.draw_self()
 
 
-    # Player movement.
+    # Player movement
     keyHeldDown = pygame.key.get_pressed()
     player.movement(keyHeldDown)
 
 
-    # Detect pygame events.
+    # Detect pygame events
     for event in pygame.event.get():
 
         if event.type == pygame.QUIT:
@@ -298,15 +301,25 @@ while appRunning:
             if event.key in [pygame.K_DELETE, pygame.K_ESCAPE]:
                 appRunning = False
             
-            # DEBUG
-            if event.key == pygame.K_1:
-                enemyList.append(Enemy_class1(mapData[0][0], mapData[0][1]))
-                
+        # DEBUG START
             if event.key == pygame.K_p:
                 isDebugModeActive = not isDebugModeActive
+            
+        
+        if keyHeldDown[pygame.K_1]:
+            isPositive = randint(0, 1)
+            if isPositive:
+                x = mapData[0][0]
+                y = mapData[0][1]
 
-            #DEBUG
+            enemyList.append(Enemy1(x, y))
 
+        elif keyHeldDown[pygame.K_2]:
+            x = mapData[0][0]
+            y = mapData[0][1]
+
+            enemyList.append(Enemy2(x, y))
+        #DEBUG END
             
 
         if event.type == pygame.MOUSEBUTTONDOWN:
