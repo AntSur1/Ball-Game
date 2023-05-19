@@ -145,13 +145,13 @@ def cursor_movement() -> None:
     '''
     Moves the player crosshair to the mouse coordinates.
     '''
-    mouse_coords = pygame.mouse.get_pos()
-    crosshair.movement(mouse_coords)
+    mouseCoords = pygame.mouse.get_pos()
+    crosshair.movement(mouseCoords)
 
 
-def spawn_bullet(player_coords: tuple, crosshair_coords:tuple) -> None:
+def spawn_bullet(playerCoords: tuple, crosshairCoords:tuple) -> None:
     ''' Creates a bullet at the player.'''
-    bulletList.append(Bullet(player_coords, crosshair_coords, 5))  # TODO change 5
+    bulletList.append(Bullet(playerCoords, crosshairCoords, 5))  # TODO change 5
 
 
 def get_distance(x1: int, y1: int, x2: int, y2: int) -> float:
@@ -307,10 +307,10 @@ while appRunning:
             
         
         if keyHeldDown[pygame.K_1]:
-            isPositive = randint(0, 1)
-            if isPositive:
-                x = mapData[0][0]
-                y = mapData[0][1]
+            # isPositive = randint(0, 1)
+            # if isPositive < 0.5:
+            x = mapData[0][0]
+            y = mapData[0][1]
 
             enemyList.append(Enemy1(x, y))
 
@@ -323,11 +323,11 @@ while appRunning:
             
 
         if event.type == pygame.MOUSEBUTTONDOWN:
-            mouse_presses = pygame.mouse.get_pressed()
-            if mouse_presses[0]:
-                player_coordinates = (player.x, player.y)
-                crosshair_coordinates = (crosshair.x, crosshair.y)
-                spawn_bullet(player_coordinates, crosshair_coordinates)
+            mousePresses = pygame.mouse.get_pressed()
+            if mousePresses[0]:
+                playerCoordinates = (player.x, player.y)
+                crosshairCoordinates = (crosshair.x, crosshair.y)
+                spawn_bullet(playerCoordinates, crosshairCoordinates)
 
     
 

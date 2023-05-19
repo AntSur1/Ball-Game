@@ -30,19 +30,19 @@ class Crosshair(object):
         self.x, self.y = coordinates
         self.width = 2
         self.height = 8
-        self.middle_space_x = 3
-        self.middle_space_y = 7
+        self.middleSpaceX = 3
+        self.middleSpaceY = 7
         self.color = LIGHT_GRAY
 
     def draw_self(self):
         # Draw top, bottom, left and right lines 
-        pygame.draw.rect(screen, self.color, (self.x, self.y - self.middle_space_y, self.width, self.height))
+        pygame.draw.rect(screen, self.color, (self.x, self.y - self.middleSpaceY, self.width, self.height))
 
-        pygame.draw.rect(screen, self.color, (self.x, self.y + self.middle_space_y, self.width, self.height))
+        pygame.draw.rect(screen, self.color, (self.x, self.y + self.middleSpaceY, self.width, self.height))
 
-        pygame.draw.rect(screen, self.color, (self.x - self.middle_space_y - self.middle_space_x, self.y + self.middle_space_x, self.height, self.width))
+        pygame.draw.rect(screen, self.color, (self.x - self.middleSpaceY - self.middleSpaceX, self.y + self.middleSpaceX, self.height, self.width))
 
-        pygame.draw.rect(screen, self.color, (self.x + self.middle_space_y - self.middle_space_x, self.y + self.middle_space_x, self.height, self.width))
+        pygame.draw.rect(screen, self.color, (self.x + self.middleSpaceY - self.middleSpaceX, self.y + self.middleSpaceX, self.height, self.width))
 
     def movement(self, coordinates: tuple):
         self.x, self.y = coordinates
@@ -89,45 +89,45 @@ class Player(Dot):
         self.vy *= (1 - self.friction)
 
         # Update position based on velocity.
-        new_x = self.x + self.vx
-        new_y = self.y + self.vy
+        newX = self.x + self.vx
+        newY = self.y + self.vy
 
         # Check if new position is outside the screen.
-        if new_x < self.r:
-            new_x = self.r
+        if newX < self.r:
+            newX = self.r
             self.vx = 0
 
-        elif new_x > SCREEN_WIDTH - self.r:
-            new_x = SCREEN_WIDTH - self.r
+        elif newX > SCREEN_WIDTH - self.r:
+            newX = SCREEN_WIDTH - self.r
             self.vx = 0
 
-        if new_y < self.r:
-            new_y = self.r
+        if newY < self.r:
+            newY = self.r
             self.vy = 0
 
-        elif new_y > SCREEN_HEIGHT - self.r:
-            new_y = SCREEN_HEIGHT - self.r
+        elif newY > SCREEN_HEIGHT - self.r:
+            newY = SCREEN_HEIGHT - self.r
             self.vy = 0
 
         # Set new coordinates.
-        self.x = new_x
-        self.y = new_y
+        self.x = newX
+        self.y = newY
 
 
 class Bullet(object):
     '''
     Creates a shootable bullet.
     '''
-    def __init__(self, coordinates: tuple = (0, 0), target_coordinates: tuple = (0, 0), hp: int = 1):
+    def __init__(self, coordinates: tuple = (0, 0), targetCoordinates: tuple = (0, 0), hp: int = 1):
         self.x, self.y = coordinates
-        self.tx, self.ty = target_coordinates
+        self.tx, self.ty = targetCoordinates
         self.hp = hp
         self.width = 5
         self.height = self.width
         self.color = YELLOW
-        self.spawn_angle = calculate_angle(coordinates, target_coordinates)  # Different from bullet_angle for some reason.
+        self.spawnAngle = calculate_angle(coordinates, targetCoordinates)  # Different from bulletAngle for some reason.
         self.speed = 5
-        self.bullet_angle = math.atan2(self.ty - self.y, self.tx - self.x)
+        self.bulletAngle = math.atan2(self.ty - self.y, self.tx - self.x)
 
         # Spawn a new bullet.
         self.surface = pygame.Surface((self.width, self.height))
@@ -136,15 +136,15 @@ class Bullet(object):
         self.rect = self.surface.get_rect()
 
         # Rotate the bullet.
-        old_center = self.rect.center
-        self.new = pygame.transform.rotate(self.surface, self.spawn_angle)
+        oldCenter = self.rect.center
+        self.new = pygame.transform.rotate(self.surface, self.spawnAngle)
         self.rect = self.new.get_rect()
-        self.rect.center = old_center
+        self.rect.center = oldCenter
 
     def update(self):
         # Move bullet based on its rotation.
-        self.x += math.cos(self.bullet_angle) * self.speed
-        self.y += math.sin(self.bullet_angle) * self.speed
+        self.x += math.cos(self.bulletAngle) * self.speed
+        self.y += math.sin(self.bulletAngle) * self.speed
 
     def draw_self(self):
         # Redraw bullet.
@@ -161,8 +161,8 @@ class Pop_Flash(object):
     '''
     def __init__(self, coordinates: tuple = (0, 0), currentTime: int = 0) -> None:
         self.coordinates = coordinates
-        self.visible_time = 5
-        self.destructionTime = currentTime + self.visible_time
+        self.visibleTime = 5
+        self.destructionTime = currentTime + self.visibleTime
         self.size = 5
         self.indent = 3
         self.points = (
