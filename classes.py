@@ -1,8 +1,10 @@
 import pygame
 import math
 from config import *
+pygame.font.init()
 
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+buttonFont = pygame.font.SysFont("freesansbold", 42)
 
 
 # Functions
@@ -22,11 +24,59 @@ def calculate_angle(coordinates1: tuple, coordinates2: tuple) -> float:
 
 
 # Classes
+class Button(object):
+    '''
+    Creates a clickable button.
+    '''
+    def __init__(self, text: str, coordinates: tuple, variable: str) -> None:
+        self.text = text
+        self.x, self.y = coordinates
+        self.renderedText = buttonFont.render("Start", True, BLACK)
+
+        self.width = self.renderedText.get_width()
+        self.height = self.renderedText.get_height()
+
+        self.variable = variable
+        
+        self.paddingX = 28
+        self.paddingY = self.paddingX / 2
+        self.background = pygame.draw.rect(screen, WHITE, (self.x - self.paddingX,
+                                                                  self.y - self.paddingY,
+                                                                  self.width + 2 * self.paddingX,
+                                                                  self.height + 2 * self.paddingY), 0, 2)
+    
+    def handle_event(self, event):
+        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            if self.background.collidepoint(event.pos):
+                global_var = globals()[self.variable]
+                globals()[self.variable] = not global_var
+
+    def blit_self(self):
+        # Check if mouse is over button
+        if self.background.collidepoint(pygame.mouse.get_pos()):
+            # Change button color
+            color = LIGHT_GRAY
+        else:
+            color = WHITE
+
+        self.border = pygame.draw.rect(screen, BLACK, (self.x - self.paddingX - 1,
+                                                                     self.y - self.paddingY - 1,
+                                                                     self.width + 2 * self.paddingX + 2,
+                                                                     self.height + 2 * self.paddingY + 2), 0, 2)
+        self.background = pygame.draw.rect(screen, color, (self.x - self.paddingX,
+                                                                  self.y - self.paddingY,
+                                                                  self.width + 2 * self.paddingX,
+                                                                  self.height + 2 * self.paddingY), 0, 2)
+
+        screen.blit(self.renderedText, (self.x, self.y))
+
+
+
 class Crosshair(object):
     '''
     Creates a movable croshair.
     '''
-    def __init__(self, coordinates: tuple = (0, 0)) -> None:
+    def __init__(self, coordinates: tuple) -> None:
         self.x, self.y = coordinates
         self.width = 2
         self.height = 8
@@ -51,7 +101,7 @@ class Dot(object):
     '''
     Base entity texture.
     '''
-    def __init__(self, coordinates: tuple = (0, 0), radius: int = 0, color: int = BLACK) -> None:
+    def __init__(self, coordinates: tuple, radius: int = 0, color: int = BLACK) -> None:
         self.x, self.y = coordinates
         self.r = radius
         self.color = color
@@ -64,7 +114,7 @@ class Player(Dot):
     '''
     Playable character.
     '''
-    def __init__(self, coordinates: tuple = (0, 0), radius: int = 0, color: int = BLACK) -> None:
+    def __init__(self, coordinates: tuple, radius: int = 0, color: int = BLACK) -> None:
         super().__init__(coordinates, radius, color)
         #! Who said something about stolen code ;)
         # Base speed factors
@@ -117,7 +167,7 @@ class Bullet(object):
     '''
     Creates a shootable bullet.
     '''
-    def __init__(self, coordinates: tuple = (0, 0), targetCoordinates: tuple = (0, 0), penetrationPoionts: int = 1) -> None:
+    def __init__(self, coordinates: tuple, targetCoordinates: tuple = (0, 0), penetrationPoionts: int = 1) -> None:
         self.x, self.y = coordinates
         self.tx, self.ty = targetCoordinates
         self.pp = penetrationPoionts
@@ -158,7 +208,7 @@ class Pop_Flash(object):
     '''
     Creates a shortlived enemy hit effect.
     '''
-    def __init__(self, coordinates: tuple = (0, 0), currentTime: int = 0) -> None:
+    def __init__(self, coordinates: tuple, currentTime: int = 0) -> None:
         self.coordinates = coordinates
         self.visibleTime = 5
         self.destructionTime = currentTime + self.visibleTime
@@ -186,7 +236,7 @@ class Enemy_walker(Dot):
     '''
     Creates a walker enemy.
     '''
-    def __init__(self, coordinates: tuple = (0, 0)) -> None:
+    def __init__(self, coordinates: tuple) -> None:
         super().__init__(coordinates)
         self.r = 10
         self.color = RED
@@ -271,10 +321,14 @@ class Enemy2(Enemy):
 
 
 class TodoListItem(object):
-    def __init__(self, title: str, tags: list, description: str) -> None:
+    '''
+    Creates a to do list ite
+    '''
+    def __init__(self, title: str, tags: list, description: str, solution: str = "") -> None:
         self.title = title
         self.tags = tags
         self.description = description
+        self.solution = solution
 
     def __repr__(self) -> str:
-        return f"\n\n=== {self.title} === \n{self.tags} \n{self.description}"
+        return f"\n\n=== {self.title} === \n{self.tags} \n{self.description} \n{self.solution}"

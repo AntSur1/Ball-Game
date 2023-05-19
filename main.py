@@ -5,17 +5,23 @@ from classes import *
 
 pygame.init()
 pygame.display.set_caption("Ball Game")
-pygame.mouse.set_visible(False)
 
-screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+screen =        pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 gameMapConfig = pygame.image.load(GAME_MAP_CONFIG)
-gameMap = pygame.image.load(GAME_MAP_FILE)
+gameMap =       pygame.image.load(GAME_MAP_FILE)
 
-textFont = pygame.font.SysFont('Consolas', 30)
+# Fonts
+gameStateFont =     pygame.font.SysFont("Consolas", 30)
+menuTitleFont =     pygame.font.SysFont("freesansbold", 64)
 
-scoreText = textFont.render("Score:", True, WHITE)
-playerHp = textFont.render("Health:", True, WHITE)
+# todo PUT THIS SOMEWHERE ELSE 
+# Game state text 
+scoreText =     gameStateFont.render("Score:", True, WHITE)
+playerHpText =  gameStateFont.render("Health:", True, WHITE)
 
+# todo PUT THIS SOMEWHERE ELSE 
+# Menu text 
+menuTitleText =     menuTitleFont.render("Ball-Game", True, BLACK)
 
 # todo
 todoList = []
@@ -24,9 +30,10 @@ todoList.append(TodoListItem("Attack patterns", ["Enemies"], "How should the ene
 todoList.append(TodoListItem("Finished wave rewards", ["Enemies"], "What should the rewards for finished waves be?"))
 todoList.append(TodoListItem("Player upgrades", ["Player"], "How should the player upgrade their bullet penetration?"))
 todoList.append(TodoListItem("Higscore", ["Higscore"], "Should highscores be saved?"))
-todoList.append(TodoListItem("Should there be menus?", ["Menu"], "Menus or no menus, that is the question?"))
+todoList.append(TodoListItem("Should there be menus?", ["Menu"], "Menus or no menus, that is the question?", "Yes, there shoud be"))
 # todo
 
+buttons = []
 
 enemyList = [ ]
 bulletList = [ ]
@@ -40,19 +47,42 @@ mapDirectionPoints = [[0, -1], [0, 1], [-1, 0], [1, 0]]  # up, down, left, right
 gameTick = 0
 score = 0
 isDebugModeActive = False
+isMenuActive = True
+
 
 def init() -> None:
     '''
     Initializes player and mouse coorinates, and reads map config.
     '''
-    global player, crosshair, mapData
+    global buttons, player, crosshair, mapData
+
+    # Creates a start button and centers it.
+    startButton = Button("Start", (0, SCREEN_HEIGHT // 2), "isMenuActive")
+    startButton.blit_self()
+    startButton.x = SCREEN_WIDTH / 2 - startButton.width / 2
+    buttons.append(startButton)
+    
     pygame.mouse.set_pos(MIDDLE_OF_SCREEN)
 
     player = Player(MIDDLE_OF_SCREEN, 15, GREEN)
     crosshair = Crosshair(MIDDLE_OF_SCREEN)
 
     mapData = read_map_data()
+
     print(mapData)
+
+
+def draw_menu() -> None:
+    '''
+    Creates and draws a menu GUI.
+    '''
+    menuTitleTextCoordinates = (center("x", menuTitleText), 60)
+
+    screen.fill(WHITE)
+    screen.blit(menuTitleText, menuTitleTextCoordinates)
+    
+    for button in buttons:
+        button.blit_self()
 
 
 def find_enemy_spawn() -> list:
@@ -141,7 +171,6 @@ def find_enemy_direction_change() -> list:
     return changeDirectionData
 
 
-
 def read_map_data() -> list:
     '''
     Reads map data and returns mapData content.
@@ -167,13 +196,26 @@ def cursor_movement() -> None:
 
 def spawn_bullet(playerCoords: tuple, crosshairCoords:tuple) -> None:
     ''' Creates a bullet at the player.'''
-    bulletList.append(Bullet(playerCoords, crosshairCoords, 5))  # TODO change 5
+    bulletList.append(Bullet(playerCoords, crosshairCoords, 5))  # TODO change 5 to upgrade value
 
 
 def get_distance(x1: int, y1: int, x2: int, y2: int) -> float:
     ''' Gets the distance between two points.'''
     distance = math.sqrt((x1-x2) ** 2 + (y1-y2) ** 2)
     return distance
+
+
+def center(axis: str, item) -> float:
+    '''
+    Takes in an axis and an item, and returns the coordinate the item will be centered on the coordinate axis.
+    OBS: Should only be used with rendered text and images!
+    '''
+    if axis == "x":
+        return SCREEN_WIDTH / 2 - item.get_width() / 2
+    elif axis == "y":
+        return SCREEN_HEIGHT / 2 - item.get_height() / 2
+    else:
+        return ValueError
 
 
 def random_enemy_spawn_coordinates() -> tuple:
@@ -237,16 +279,12 @@ def out_of_bounds_check(x: int, y: int) -> bool:
     return False
 
 
-# ========== Start ========== #
-init()
-
-# Main game loop
-appRunning = True
-while appRunning:
-    gameTick += 1
-
+def update_and_draw_screen() -> None:
+    '''
+    Updates and draws entities on screen, and the screen itself.
+    '''
     if isDebugModeActive:
-        screen.fill((0, 0, 0))
+        screen.fill(BLACK)
         screen.blit(gameMapConfig, (0,0))
 
     else:
@@ -269,8 +307,6 @@ while appRunning:
                 # if isDebugModeActive:
                 #     print("directionPoints", directionPoints)
                 #     print("point", point)
-
-
                 distance = get_distance(enemy.x, enemy.y, point[0], point[1])
                 if distance < enemy.r / 2:
                     enemy.moveDirection = mapDirectionPoints[0]
@@ -299,20 +335,36 @@ while appRunning:
         if popFlash.destructionTime <= gameTick:
             popFlashes.remove(popFlash)
 
+    # Player movement
+    player.movement(keyHeldDown)
 
     player.draw_self()
     crosshair.draw_self()
     screen.blit(scoreText, (10, 5))
-    screen.blit(playerHp, (10, 35))
+    screen.blit(playerHpText, (10, 35))
 
-    # Player movement
+
+# ========== Start ========== #
+init()
+
+# Main game loop
+appRunning = True
+while appRunning:
+    gameTick += 1
+
     keyHeldDown = pygame.key.get_pressed()
-    player.movement(keyHeldDown)
+    if isMenuActive:
+        pygame.mouse.set_visible(True)
+        draw_menu()
+        #isMenuActive = False
+    
+    else:
+        pygame.mouse.set_visible(False)
+        update_and_draw_screen()
 
 
-    # Detect pygame events
+    # Detect events
     for event in pygame.event.get():
-
         if event.type == pygame.QUIT:
             appRunning = False
 
@@ -325,12 +377,9 @@ while appRunning:
                 isDebugModeActive = not isDebugModeActive
 
             if event.key == pygame.K_t:
-                print(todoList)
-            
+                print(todoList)            
         
         if keyHeldDown[pygame.K_1]:
-            # isPositive = randint(0, 1)
-            # if isPositive < 0.5:
             x = mapData[0][0]
             y = mapData[0][1]
 
@@ -342,8 +391,12 @@ while appRunning:
 
             enemyList.append(Enemy2(x, y))
         #DEBUG END
-            
 
+        # Menu buttons
+        for button in buttons:
+            button.handle_event(event)
+
+        # Player shoot
         if event.type == pygame.MOUSEBUTTONDOWN:
             mousePresses = pygame.mouse.get_pressed()
             if mousePresses[0]:
