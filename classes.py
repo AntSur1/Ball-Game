@@ -26,7 +26,7 @@ class Crosshair(object):
     '''
     Creates a movable croshair.
     '''
-    def __init__(self, coordinates: tuple = (0, 0)):
+    def __init__(self, coordinates: tuple = (0, 0)) -> None:
         self.x, self.y = coordinates
         self.width = 2
         self.height = 8
@@ -34,7 +34,7 @@ class Crosshair(object):
         self.middleSpaceY = 7
         self.color = LIGHT_GRAY
 
-    def draw_self(self):
+    def draw_self(self) -> None:
         # Draw top, bottom, left and right lines 
         pygame.draw.rect(screen, self.color, (self.x, self.y - self.middleSpaceY, self.width, self.height))
 
@@ -44,7 +44,7 @@ class Crosshair(object):
 
         pygame.draw.rect(screen, self.color, (self.x + self.middleSpaceY - self.middleSpaceX, self.y + self.middleSpaceX, self.height, self.width))
 
-    def movement(self, coordinates: tuple):
+    def movement(self, coordinates: tuple) -> None:
         self.x, self.y = coordinates
 
 
@@ -52,12 +52,12 @@ class Dot(object):
     '''
     Base entity texture.
     '''
-    def __init__(self, coordinates: tuple = (0, 0), radius: int = 0, color: int = BLACK):
+    def __init__(self, coordinates: tuple = (0, 0), radius: int = 0, color: int = BLACK) -> None:
         self.x, self.y = coordinates
         self.r = radius
         self.color = color
 
-    def draw_self(self):
+    def draw_self(self) -> None:
         pygame.draw.circle(screen, self.color, (self.x, self.y), self.r)
 
 
@@ -65,7 +65,7 @@ class Player(Dot):
     '''
     Playable character.
     '''
-    def __init__(self, coordinates: tuple = (0, 0), radius: int = 0, color: int = BLACK):
+    def __init__(self, coordinates: tuple = (0, 0), radius: int = 0, color: int = BLACK) -> None:
         super().__init__(coordinates, radius, color)
         #! Who said something about stolen code ;)
         # Base speed factors
@@ -74,7 +74,7 @@ class Player(Dot):
         self.vy = 0
         self.friction = 0.13
     
-    def movement(self, key):
+    def movement(self, key) -> None:
         if key[pygame.K_w]:
             self.vy -= self.speed
         if key[pygame.K_s]:
@@ -118,7 +118,7 @@ class Bullet(object):
     '''
     Creates a shootable bullet.
     '''
-    def __init__(self, coordinates: tuple = (0, 0), targetCoordinates: tuple = (0, 0), hp: int = 1):
+    def __init__(self, coordinates: tuple = (0, 0), targetCoordinates: tuple = (0, 0), hp: int = 1) -> None:
         self.x, self.y = coordinates
         self.tx, self.ty = targetCoordinates
         self.hp = hp
@@ -141,12 +141,12 @@ class Bullet(object):
         self.rect = self.new.get_rect()
         self.rect.center = oldCenter
 
-    def update(self):
+    def update(self) -> None:
         # Move bullet based on its rotation.
         self.x += math.cos(self.bulletAngle) * self.speed
         self.y += math.sin(self.bulletAngle) * self.speed
 
-    def draw_self(self):
+    def draw_self(self) -> None:
         # Redraw bullet.
         self.surface.fill(self.color)
         self.rect = self.surface.get_rect()
@@ -179,7 +179,7 @@ class Pop_Flash(object):
             (coordinates[0] - self.size / self.indent, coordinates[1] - self.size / self.indent)
         )
     
-    def self_draw(self):
+    def self_draw(self) -> None:
         pygame.draw.polygon(screen, WHITE, self.points)
 
 
@@ -187,13 +187,13 @@ class Enemy_walker(Dot):
     '''
     Creates a walker enemy.
     '''
-    def __init__(self, coordinates: tuple = (0, 0)):
+    def __init__(self, coordinates: tuple = (0, 0)) -> None:
         super().__init__(coordinates)
         self.r = 10
         self.color = RED
         self.speed = 1.3
 
-    def movement(self, player_coordinates):
+    def movement(self, player_coordinates) -> None:
         x, y = player_coordinates
         dx = x - self.x
         dy = y - self.y
@@ -206,7 +206,7 @@ class Enemy(Dot):
     '''
     Creates a default enemy.
     '''
-    def __init__(self, coordinates: tuple, spawnDirection: list):
+    def __init__(self, coordinates: tuple, spawnDirection: list) -> None:
         super().__init__(coordinates)
         self.moveDirection = spawnDirection
         self.hitCooldown = False
@@ -214,14 +214,14 @@ class Enemy(Dot):
         self.maxHp = 1
         self.hp = self.maxHp
 
-    def movement(self):
+    def movement(self) -> None:
         vx = self.moveDirection[0]
         vy = self.moveDirection[1]
 
         self.x += self.speed * vx
         self.y += self.speed * vy
 
-    def draw_health_bar(self):
+    def draw_health_bar(self) -> None:
         hpBarWidth = 20
         hpBarHeight = 5
         hpLost = self.maxHp - self.hp
@@ -245,7 +245,7 @@ class Enemy(Dot):
         
         
 class Enemy1(Enemy):
-    def __init__(self, coordinates: tuple, spawnDirection: list):
+    def __init__(self, coordinates: tuple, spawnDirection: list) -> None:
         super().__init__(coordinates, spawnDirection)
         self.r = 10
         self.color = PURPLE
@@ -256,7 +256,7 @@ class Enemy1(Enemy):
 
 
 class Enemy2(Enemy):
-    def __init__(self, coordinates: tuple, spawnDirection: list):
+    def __init__(self, coordinates: tuple, spawnDirection: list) -> None:
         super().__init__(coordinates,  spawnDirection)
         self.r = 15
         self.color = BLUE

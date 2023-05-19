@@ -186,7 +186,7 @@ def random_enemy_spawn_coordinates() -> tuple:
 
 
 def check_bullet_hit() -> None:
-    ''' Checks if a bullet has an enemy.'''
+    '''Checks if a bullet has an enemy.'''
     for enemy in enemyList:
         for bullet in bulletList:
             distance = get_distance(enemy.x, enemy.y, bullet.x, bullet.y)
