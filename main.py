@@ -11,6 +11,23 @@ screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 gameMapConfig = pygame.image.load(GAME_MAP_CONFIG)
 gameMap = pygame.image.load(GAME_MAP_FILE)
 
+textFont = pygame.font.SysFont('Consolas', 30)
+
+scoreText = textFont.render("Score:", True, WHITE)
+playerHp = textFont.render("Health:", True, WHITE)
+
+
+# todo
+todoList = []
+
+todoList.append(TodoListItem("Attack patterns", ["Enemies"], "How should the enemy waves look like?"))
+todoList.append(TodoListItem("Finished wave rewards", ["Enemies"], "What should the rewards for finished waves be?"))
+todoList.append(TodoListItem("Player upgrades", ["Player"], "How should the player upgrade their bullet penetration?"))
+todoList.append(TodoListItem("Higscore", ["Higscore"], "Should highscores be saved?"))
+todoList.append(TodoListItem("Should there be menus?", ["Menu"], "Menus or no menus, that is the question?"))
+# todo
+
+
 enemyList = [ ]
 bulletList = [ ]
 popFlashes = [ ]
@@ -21,6 +38,7 @@ mapData = [ ]  # [[(spawnCoordinates), [spawnDirection]], [directionPoint], [dir
 mapDirectionPoints = [[0, -1], [0, 1], [-1, 0], [1, 0]]  # up, down, left, right
 
 gameTick = 0
+score = 0
 isDebugModeActive = False
 
 def init() -> None:
@@ -142,9 +160,7 @@ def read_map_data() -> list:
 
 
 def cursor_movement() -> None:
-    '''
-    Moves the player crosshair to the mouse coordinates.
-    '''
+    ''' Moves the player crosshair to the mouse coordinates.'''
     mouseCoords = pygame.mouse.get_pos()
     crosshair.movement(mouseCoords)
 
@@ -186,7 +202,9 @@ def random_enemy_spawn_coordinates() -> tuple:
 
 
 def check_bullet_hit() -> None:
-    '''Checks if a bullet has an enemy.'''
+    '''
+    Checks if a bullet has an enemy.
+    '''
     for enemy in enemyList:
         for bullet in bulletList:
             distance = get_distance(enemy.x, enemy.y, bullet.x, bullet.y)
@@ -195,14 +213,14 @@ def check_bullet_hit() -> None:
             if distance < enemy.r:
                 if not enemy.hitCooldown:
                     enemy.hp -= 1
-                    bullet.hp -= 1
+                    bullet.pp -= 1
                     enemy.hitCooldown = True
                     popFlashes.append(Pop_Flash((bullet.x, bullet.y), gameTick))
 
                 if enemy.hp <= 0:
                     enemyList.remove(enemy)
                 
-                if bullet.hp <= 0:
+                if bullet.pp <= 0:
                     bulletList.remove(bullet)
 
             else:
@@ -284,7 +302,8 @@ while appRunning:
 
     player.draw_self()
     crosshair.draw_self()
-
+    screen.blit(scoreText, (10, 5))
+    screen.blit(playerHp, (10, 35))
 
     # Player movement
     keyHeldDown = pygame.key.get_pressed()
@@ -304,6 +323,9 @@ while appRunning:
         # DEBUG START
             if event.key == pygame.K_p:
                 isDebugModeActive = not isDebugModeActive
+
+            if event.key == pygame.K_t:
+                print(todoList)
             
         
         if keyHeldDown[pygame.K_1]:

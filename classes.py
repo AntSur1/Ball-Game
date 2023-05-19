@@ -35,7 +35,6 @@ class Crosshair(object):
         self.color = LIGHT_GRAY
 
     def draw_self(self) -> None:
-        # Draw top, bottom, left and right lines 
         pygame.draw.rect(screen, self.color, (self.x, self.y - self.middleSpaceY, self.width, self.height))
 
         pygame.draw.rect(screen, self.color, (self.x, self.y + self.middleSpaceY, self.width, self.height))
@@ -118,10 +117,10 @@ class Bullet(object):
     '''
     Creates a shootable bullet.
     '''
-    def __init__(self, coordinates: tuple = (0, 0), targetCoordinates: tuple = (0, 0), hp: int = 1) -> None:
+    def __init__(self, coordinates: tuple = (0, 0), targetCoordinates: tuple = (0, 0), penetrationPoionts: int = 1) -> None:
         self.x, self.y = coordinates
         self.tx, self.ty = targetCoordinates
-        self.hp = hp
+        self.pp = penetrationPoionts
         self.width = 5
         self.height = self.width
         self.color = YELLOW
@@ -242,9 +241,11 @@ class Enemy(Dot):
             (2 * hpBarWidth * ( 1 - hpPresentageLost ), hpBarHeight)
         ))
 
-        
-        
+
 class Enemy1(Enemy):
+    '''
+    Creates a type 1 enemy.
+    '''
     def __init__(self, coordinates: tuple, spawnDirection: list) -> None:
         super().__init__(coordinates, spawnDirection)
         self.r = 10
@@ -256,6 +257,9 @@ class Enemy1(Enemy):
 
 
 class Enemy2(Enemy):
+    '''
+    Creates a type 2 enemy.
+    '''
     def __init__(self, coordinates: tuple, spawnDirection: list) -> None:
         super().__init__(coordinates,  spawnDirection)
         self.r = 15
@@ -264,3 +268,13 @@ class Enemy2(Enemy):
         self.speed = 0.6
         self.maxHp = 3
         self.hp = self.maxHp
+
+
+class TodoListItem(object):
+    def __init__(self, title: str, tags: list, description: str) -> None:
+        self.title = title
+        self.tags = tags
+        self.description = description
+
+    def __repr__(self) -> str:
+        return f"\n\n=== {self.title} === \n{self.tags} \n{self.description}"
