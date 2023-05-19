@@ -18,7 +18,7 @@ popFlashes = [ ]
 player = None
 crosshair = None
 mapData = [ ]  # [[(spawnCoordinates), [spawnDirection]], [directionPoint], [directionPoint]...]
-mapDirectionPoints = [[0, -1], [0, 1], [-1, 0], [1, 0]]  # U, D, L, R
+mapDirectionPoints = [[0, -1], [0, 1], [-1, 0], [1, 0]]  # up, down, left, right
 
 gameTick = 0
 isDebugModeActive = False

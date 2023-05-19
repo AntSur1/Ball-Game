@@ -211,7 +211,8 @@ class Enemy(Dot):
         self.moveDirection = spawnDirection
         self.hitCooldown = False
         self.speed = 1
-        self.hp = 1
+        self.maxHp = 1
+        self.hp = self.maxHp
 
     def movement(self):
         vx = self.moveDirection[0]
@@ -221,14 +222,26 @@ class Enemy(Dot):
         self.y += self.speed * vy
 
     def draw_health_bar(self):
+        hpBarWidth = 20
+        hpBarHeight = 5
+        hpLost = self.maxHp - self.hp
+        hpPresentageLost = hpLost / self.maxHp
+
         pygame.draw.rect(screen, BLACK, (
-            (self.x - 21, self.y - 2 * self.r - 1),
-            (42, 7)
+            (self.x - hpBarWidth - 1 , self.y - 2 * self.r - 1),
+            (2 * hpBarWidth + 2, hpBarHeight + 2)
         ))
+
+        pygame.draw.rect(screen, RED, (
+            (self.x - hpBarWidth, self.y - 2 * self.r),
+            (2 * hpBarWidth, hpBarHeight)
+        ))
+
         pygame.draw.rect(screen, GREEN, (
-            (self.x - 20, self.y - 2 * self.r),
-            (40, 5)
+            (self.x - hpBarWidth, self.y - 2 * self.r),
+            (2 * hpBarWidth * ( 1 - hpPresentageLost ), hpBarHeight)
         ))
+
         
         
 class Enemy1(Enemy):
@@ -238,7 +251,8 @@ class Enemy1(Enemy):
         self.color = PURPLE
         self.moveDirection = spawnDirection
         self.speed = 1
-        self.hp = 1
+        self.maxHp = 2
+        self.hp = self.maxHp
 
 
 class Enemy2(Enemy):
@@ -248,4 +262,5 @@ class Enemy2(Enemy):
         self.color = BLUE
         self.moveDirection = spawnDirection
         self.speed = 0.6
-        self.hp = 3
+        self.maxHp = 3
+        self.hp = self.maxHp
