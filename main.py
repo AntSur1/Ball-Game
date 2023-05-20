@@ -4,34 +4,44 @@ from config import *
 from classes import *
 
 pygame.init()
+pygame.mixer.init()
+
 pygame.display.set_caption("Ball Game")
 
-screen =        pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 gameMapConfig = pygame.image.load(GAME_MAP_CONFIG)
-gameMap =       pygame.image.load(GAME_MAP_FILE)
+gameMap = pygame.image.load(GAME_MAP_FILE)
+
+# todo PUT THIS SOMEWHERE ELSE ?
+# Sounds
+introTuneSound = pygame.mixer.Sound('sounds/introTune.mp3')
+gameStartSound = pygame.mixer.Sound('sounds/gameStart.mp3')
+buttonClickSound = pygame.mixer.Sound('sounds/buttonClick.wav')
+enemyHitSound = pygame.mixer.Sound('sounds/enemyHit.mp3')
+playerShotSound = pygame.mixer.Sound('sounds/playerShot.mp3')
 
 # Fonts
-gameStateFont =     pygame.font.SysFont("Consolas", 30)
-menuTitleFont =     pygame.font.SysFont("freesansbold", 64)
+gameStateFont = pygame.font.SysFont("Consolas", 30)
+menuTitleFont = pygame.font.SysFont("freesansbold", 64)
 
-# todo PUT THIS SOMEWHERE ELSE 
-# Game state text 
-scoreText =     gameStateFont.render("Score:", True, WHITE)
-playerHpText =  gameStateFont.render("Health:", True, WHITE)
-
-# todo PUT THIS SOMEWHERE ELSE 
+# todo PUT THIS SOMEWHERE ELSE ?
 # Menu text 
-menuTitleText =     menuTitleFont.render("Ball-Game", True, BLACK)
+menuTitleText = menuTitleFont.render("Ball-Game", True, BLACK)
+
 
 # todo
+
 todoList = []
 
+todoList.append(TodoListItem("Reload speed", ["Player"], "Create a new reload speed thingy"))
 todoList.append(TodoListItem("Attack patterns", ["Enemies"], "How should the enemy waves look like?"))
 todoList.append(TodoListItem("Finished wave rewards", ["Enemies"], "What should the rewards for finished waves be?"))
-todoList.append(TodoListItem("Player upgrades", ["Player"], "How should the player upgrade their bullet penetration?"))
+todoList.append(TodoListItem("Player upgrades", ["Player"], "How should the player upgrade their bullet penetration and reload speed?"))
 todoList.append(TodoListItem("Higscore", ["Higscore"], "Should highscores be saved?"))
 todoList.append(TodoListItem("Should there be menus?", ["Menu"], "Menus or no menus, that is the question?", "Yes, there shoud be"))
+
 # todo
+
 
 buttons = []
 
@@ -41,11 +51,12 @@ popFlashes = [ ]
 
 player = None
 crosshair = None
-mapData = [ ]  # [[(spawnCoordinates), [spawnDirection]], [directionPoint], [directionPoint]...]
+mapData = [ ]  # [[(spawnCoordinates), [[spawnDirection]], [directionPoint], [directionPoint]... ]]
 mapDirectionPoints = [[0, -1], [0, 1], [-1, 0], [1, 0]]  # up, down, left, right
 
 gameTick = 0
 score = 0
+playerHp = 50
 isDebugModeActive = False
 isMenuActive = True
 
@@ -55,6 +66,11 @@ def init() -> None:
     Initializes player and mouse coorinates, and reads map config.
     '''
     global buttons, player, crosshair, mapData
+
+    # Reads map data
+    screen.blit(gameMapConfig, (0,0))
+    mapData = read_map_data()
+    print(mapData)
 
     # Creates a start button and centers it.
     startButton = Button("Start", (0, SCREEN_HEIGHT // 2), "isMenuActive")
@@ -67,9 +83,7 @@ def init() -> None:
     player = Player(MIDDLE_OF_SCREEN, 15, GREEN)
     crosshair = Crosshair(MIDDLE_OF_SCREEN)
 
-    mapData = read_map_data()
-
-    print(mapData)
+    introTuneSound.play()
 
 
 def draw_menu() -> None:
@@ -177,8 +191,6 @@ def read_map_data() -> list:
     '''
     mapData = []
 
-    screen.blit(gameMapConfig, (0, 0))
-
     spawnData = find_enemy_spawn()
     directionData = find_enemy_direction_change()
 
@@ -197,6 +209,7 @@ def cursor_movement() -> None:
 def spawn_bullet(playerCoords: tuple, crosshairCoords:tuple) -> None:
     ''' Creates a bullet at the player.'''
     bulletList.append(Bullet(playerCoords, crosshairCoords, 5))  # TODO change 5 to upgrade value
+    playerShotSound.play()
 
 
 def get_distance(x1: int, y1: int, x2: int, y2: int) -> float:
@@ -247,6 +260,8 @@ def check_bullet_hit() -> None:
     '''
     Checks if a bullet has an enemy.
     '''
+    global score
+
     for enemy in enemyList:
         for bullet in bulletList:
             distance = get_distance(enemy.x, enemy.y, bullet.x, bullet.y)
@@ -257,9 +272,12 @@ def check_bullet_hit() -> None:
                     enemy.hp -= 1
                     bullet.pp -= 1
                     enemy.hitCooldown = True
+
                     popFlashes.append(Pop_Flash((bullet.x, bullet.y), gameTick))
+                    enemyHitSound.play()
 
                 if enemy.hp <= 0:
+                    score += enemy.scoreReward
                     enemyList.remove(enemy)
                 
                 if bullet.pp <= 0:
@@ -283,6 +301,7 @@ def update_and_draw_screen() -> None:
     '''
     Updates and draws entities on screen, and the screen itself.
     '''
+    global playerHp
     if isDebugModeActive:
         screen.fill(BLACK)
         screen.blit(gameMapConfig, (0,0))
@@ -314,7 +333,7 @@ def update_and_draw_screen() -> None:
 
         if out_of_bounds_check(enemy.x, enemy.y):
             enemyList.remove(enemy)
-            print("PlayerHp - 1")
+            playerHp -= 1
 
         enemy.movement()
         enemy.draw_self()
@@ -340,6 +359,11 @@ def update_and_draw_screen() -> None:
 
     player.draw_self()
     crosshair.draw_self()
+
+
+    # Game state text 
+    scoreText = gameStateFont.render(f"Score: {score}", True, WHITE)
+    playerHpText = gameStateFont.render(f"Health: {playerHp}", True, WHITE)
     screen.blit(scoreText, (10, 5))
     screen.blit(playerHpText, (10, 35))
 
@@ -356,7 +380,6 @@ while appRunning:
     if isMenuActive:
         pygame.mouse.set_visible(True)
         draw_menu()
-        #isMenuActive = False
     
     else:
         pygame.mouse.set_visible(False)
@@ -392,18 +415,24 @@ while appRunning:
             enemyList.append(Enemy2(x, y))
         #DEBUG END
 
-        # Menu buttons
-        for button in buttons:
-            button.handle_event(event)
 
-        # Player shoot
-        if event.type == pygame.MOUSEBUTTONDOWN:
-            mousePresses = pygame.mouse.get_pressed()
-            if mousePresses[0]:
-                playerCoordinates = (player.x, player.y)
-                crosshairCoordinates = (crosshair.x, crosshair.y)
-                spawn_bullet(playerCoordinates, crosshairCoordinates)
+        # Menu functionality
+        if isMenuActive:
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                if buttons[0].background.collidepoint(event.pos):
+                    buttonClickSound.play()
+                    isMenuActive = False
+                    gameStartSound.play()            
 
+
+        else:
+            # Player shoot
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                mousePresses = pygame.mouse.get_pressed()
+                if mousePresses[0]:
+                    playerCoordinates = (player.x, player.y)
+                    crosshairCoordinates = (crosshair.x, crosshair.y)
+                    spawn_bullet(playerCoordinates, crosshairCoordinates)
     
 
     # Update screen

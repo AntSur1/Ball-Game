@@ -44,12 +44,6 @@ class Button(object):
                                                                   self.y - self.paddingY,
                                                                   self.width + 2 * self.paddingX,
                                                                   self.height + 2 * self.paddingY), 0, 2)
-    
-    def handle_event(self, event):
-        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-            if self.background.collidepoint(event.pos):
-                global_var = globals()[self.variable]
-                globals()[self.variable] = not global_var
 
     def blit_self(self):
         # Check if mouse is over button
@@ -304,6 +298,7 @@ class Enemy1(Enemy):
         self.speed = 1
         self.maxHp = 2
         self.hp = self.maxHp
+        self.scoreReward = 2
 
 
 class Enemy2(Enemy):
@@ -318,6 +313,7 @@ class Enemy2(Enemy):
         self.speed = 0.6
         self.maxHp = 3
         self.hp = self.maxHp
+        self.scoreReward = 3
 
 
 class TodoListItem(object):
