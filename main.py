@@ -5,12 +5,14 @@ from classes import *
 
 pygame.init()
 pygame.mixer.init()
+pygame.mixer.set_num_channels(30)
 
 pygame.display.set_caption("Ball Game")
 
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-gameMapConfig = pygame.image.load(GAME_MAP_CONFIG)
-gameMap = pygame.image.load(GAME_MAP_FILE)
+
+gameMapConfig = pygame.image.load(f"maps/{GAME_MAP_NR}/game-map-config.png")
+gameMap = pygame.image.load(f"maps/{GAME_MAP_NR}/game-map.png")
 
 # todo PUT THIS SOMEWHERE ELSE ?
 # Sounds
@@ -33,12 +35,10 @@ menuTitleText = menuTitleFont.render("Ball-Game", True, BLACK)
 
 todoList = []
 
-todoList.append(TodoListItem("Reload speed", ["Player"], "Create a new reload speed thingy"))
 todoList.append(TodoListItem("Attack patterns", ["Enemies"], "How should the enemy waves look like?"))
-todoList.append(TodoListItem("Finished wave rewards", ["Enemies"], "What should the rewards for finished waves be?"))
-todoList.append(TodoListItem("Player upgrades", ["Player"], "How should the player upgrade their bullet penetration and reload speed?"))
-todoList.append(TodoListItem("Higscore", ["Higscore"], "Should highscores be saved?"))
-todoList.append(TodoListItem("Should there be menus?", ["Menu"], "Menus or no menus, that is the question?", "Yes, there shoud be"))
+todoList.append(TodoListItem("Player upgrades", ["Player"], "Upgrade bullet penetration and reload speed"))
+todoList.append(TodoListItem("Death screen", ["Menu"], "Show a game over screen."))
+todoList.append(TodoListItem("Higscore", ["Higscore"], "Save highscores."))
 
 # todo
 
@@ -48,6 +48,7 @@ buttons = []
 enemyList = [ ]
 bulletList = [ ]
 popFlashes = [ ]
+soundChannels = [ ]
 
 player = None
 crosshair = None
@@ -61,16 +62,41 @@ isDebugModeActive = False
 isMenuActive = True
 
 
+def center(axis: str, item) -> float:
+    '''
+    Takes in an axis and an item, and returns the coordinate the item will be centered on the coordinate axis.
+    OBS: Should only be used with rendered text and images!
+    '''
+    if axis == "x":
+        return SCREEN_WIDTH / 2 - item.get_width() / 2
+    elif axis == "y":
+        return SCREEN_HEIGHT / 2 - item.get_height() / 2
+    else:
+        return ValueError
+
+
+def get_distance(x1: int, y1: int, x2: int, y2: int) -> float:
+    ''' Gets the distance between two points.'''
+    distance = math.sqrt((x1-x2) ** 2 + (y1-y2) ** 2)
+    return distance
+
+
 def init() -> None:
     '''
-    Initializes player and mouse coorinates, and reads map config.
+    Reads map config, creates the start menu, and calulates mouse and player start coordinates. 
     '''
     global buttons, player, crosshair, mapData
+
+    player = None
+    crosshair = None
+    gameTick = 0
+    score = 0
+    playerHp = 50
 
     # Reads map data
     screen.blit(gameMapConfig, (0,0))
     mapData = read_map_data()
-    print(mapData)
+    #print(mapData)
 
     # Creates a start button and centers it.
     startButton = Button("Start", (0, SCREEN_HEIGHT // 2), "isMenuActive")
@@ -158,7 +184,7 @@ def find_enemy_spawn() -> list:
     return data
 
 
-def find_enemy_direction_change() -> list:
+def find_enemy_direction_points() -> list:
     '''
     Returns all coordinates with direction change data.
     '''
@@ -181,7 +207,7 @@ def find_enemy_direction_change() -> list:
 
             if pixelColor == GO_RIGHT_COLOR:
                 changeDirectionData[3].append(coordinates)
-                
+
     return changeDirectionData
 
 
@@ -192,7 +218,7 @@ def read_map_data() -> list:
     mapData = []
 
     spawnData = find_enemy_spawn()
-    directionData = find_enemy_direction_change()
+    directionData = find_enemy_direction_points()
 
     mapData.append(spawnData)
     mapData.append(directionData)
@@ -210,25 +236,6 @@ def spawn_bullet(playerCoords: tuple, crosshairCoords:tuple) -> None:
     ''' Creates a bullet at the player.'''
     bulletList.append(Bullet(playerCoords, crosshairCoords, 5))  # TODO change 5 to upgrade value
     playerShotSound.play()
-
-
-def get_distance(x1: int, y1: int, x2: int, y2: int) -> float:
-    ''' Gets the distance between two points.'''
-    distance = math.sqrt((x1-x2) ** 2 + (y1-y2) ** 2)
-    return distance
-
-
-def center(axis: str, item) -> float:
-    '''
-    Takes in an axis and an item, and returns the coordinate the item will be centered on the coordinate axis.
-    OBS: Should only be used with rendered text and images!
-    '''
-    if axis == "x":
-        return SCREEN_WIDTH / 2 - item.get_width() / 2
-    elif axis == "y":
-        return SCREEN_HEIGHT / 2 - item.get_height() / 2
-    else:
-        return ValueError
 
 
 def random_enemy_spawn_coordinates() -> tuple:
@@ -314,7 +321,7 @@ def update_and_draw_screen() -> None:
 
     # Update and draw screen
     for enemy in enemyList:
-        for directionPoints in mapData[1]:
+        for i, directionPoints in enumerate(mapData[1]):
             
             # if isDebugModeActive:
             #     print()
@@ -327,8 +334,8 @@ def update_and_draw_screen() -> None:
                 #     print("directionPoints", directionPoints)
                 #     print("point", point)
                 distance = get_distance(enemy.x, enemy.y, point[0], point[1])
-                if distance < enemy.r / 2:
-                    enemy.moveDirection = mapDirectionPoints[0]
+                if distance < enemy.r * 2 ** -1:
+                    enemy.moveDirection = mapDirectionPoints[i]
                     break
 
         if out_of_bounds_check(enemy.x, enemy.y):
@@ -359,7 +366,6 @@ def update_and_draw_screen() -> None:
 
     player.draw_self()
     crosshair.draw_self()
-
 
     # Game state text 
     scoreText = gameStateFont.render(f"Score: {score}", True, WHITE)
