@@ -226,25 +226,6 @@ class Pop_Flash(object):
         pygame.draw.polygon(screen, WHITE, self.points)
 
 
-class Enemy_walker(Dot):
-    '''
-    Creates a walker enemy.
-    '''
-    def __init__(self, coordinates: tuple) -> None:
-        super().__init__(coordinates)
-        self.r = 10
-        self.color = RED
-        self.speed = 1.3
-
-    def movement(self, player_coordinates) -> None:
-        x, y = player_coordinates
-        dx = x - self.x
-        dy = y - self.y
-        distance = math.sqrt(dx ** 2 + dy ** 2)
-        self.x += dx / distance * self.speed * 2.3
-        self.y += dy / distance * self.speed * 2.3
-
-
 class Enemy(Dot):
     '''
     Creates a default enemy.
