@@ -14,11 +14,11 @@ gameMap = pygame.image.load(GAME_MAP_FILE)
 
 # todo PUT THIS SOMEWHERE ELSE ?
 # Sounds
-introTuneSound = pygame.mixer.Sound('sounds/introTune.mp3')
-gameStartSound = pygame.mixer.Sound('sounds/gameStart.mp3')
+introTuneSound = pygame.mixer.Sound('sounds/introTune.wav')
+gameStartSound = pygame.mixer.Sound('sounds/gameStart.wav')
 buttonClickSound = pygame.mixer.Sound('sounds/buttonClick.wav')
-enemyHitSound = pygame.mixer.Sound('sounds/enemyHit.mp3')
-playerShotSound = pygame.mixer.Sound('sounds/playerShot.mp3')
+enemyHitSound = pygame.mixer.Sound('sounds/enemyHit.wav')
+playerShotSound = pygame.mixer.Sound('sounds/playerShot.wav')
 
 # Fonts
 gameStateFont = pygame.font.SysFont("Consolas", 30)
