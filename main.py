@@ -250,6 +250,13 @@ def read_map_data() -> list:
     return mapData
 
 
+def generate_waves() -> list:
+    '''
+    Generates a wave of enemies.
+    '''
+    pass
+
+
 def spawn_bullet(playerCoords: tuple, crosshairCoords:tuple) -> None:
     ''' Creates a bullet at the player.'''
     global bulletsShot
@@ -383,7 +390,6 @@ def run_game() -> None:
     
     if playerHp <= 0:
         end_game()
-
 
 
 def end_game() -> None:
