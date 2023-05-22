@@ -161,7 +161,7 @@ class Bullet(object):
     '''
     Creates a shootable bullet.
     '''
-    def __init__(self, coordinates: tuple, targetCoordinates: tuple = (0, 0), penetrationPoionts: int = 1) -> None:
+    def __init__(self, coordinates: tuple, targetCoordinates: tuple = (0, 0), penetrationPoionts: int = 1, bulletID: int = 0) -> None:
         self.x, self.y = coordinates
         self.tx, self.ty = targetCoordinates
         self.pp = penetrationPoionts
@@ -171,6 +171,7 @@ class Bullet(object):
         self.spawnAngle = calculate_angle(coordinates, targetCoordinates)  # Different from bulletAngle for some reason.
         self.speed = 5
         self.bulletAngle = math.atan2(self.ty - self.y, self.tx - self.x)
+        self.id = bulletID
 
         # Spawn a new bullet.
         self.surface = pygame.Surface((self.width, self.height))
@@ -233,7 +234,7 @@ class Enemy(Dot):
     def __init__(self, coordinates: tuple, spawnDirection: list) -> None:
         super().__init__(coordinates)
         self.moveDirection = spawnDirection
-        self.hitCooldown = False
+        self.bulletCooldown = [ ]
         self.speed = 1
         self.maxHp = 1
         self.hp = self.maxHp
@@ -246,24 +247,27 @@ class Enemy(Dot):
         self.y += self.speed * vy
 
     def draw_health_bar(self) -> None:
-        hpBarWidth = 20
-        hpBarHeight = 5
         hpLost = self.maxHp - self.hp
-        hpPresentageLost = hpLost / self.maxHp
+        hpLost = hpLost / self.maxHp
+
+        x = self.x - 20 
+        y = self.y - self.r  - 15
+        width = 40
+        height = 5
 
         pygame.draw.rect(screen, BLACK, (
-            (self.x - hpBarWidth - 1 , self.y - 2 * self.r - 1),
-            (2 * hpBarWidth + 2, hpBarHeight + 2)
+            (x - 1 , y - 1),
+            (width + 2, height + 2)
         ))
 
         pygame.draw.rect(screen, RED, (
-            (self.x - hpBarWidth, self.y - 2 * self.r),
-            (2 * hpBarWidth, hpBarHeight)
+            (x, y),
+            (width, height)
         ))
 
         pygame.draw.rect(screen, GREEN, (
-            (self.x - hpBarWidth, self.y - 2 * self.r),
-            (2 * hpBarWidth * ( 1 - hpPresentageLost ), hpBarHeight)
+            (x, y),
+            (width * ( 1 - hpLost ), height)
         ))
 
 
@@ -276,7 +280,7 @@ class Enemy1(Enemy):
         self.r = 10
         self.color = PURPLE
         self.moveDirection = spawnDirection
-        self.speed = 1
+        self.speed = 1.2
         self.maxHp = 2
         self.hp = self.maxHp
         self.scoreReward = 2
@@ -292,9 +296,55 @@ class Enemy2(Enemy):
         self.color = BLUE
         self.moveDirection = spawnDirection
         self.speed = 0.6
+        self.maxHp = 4
+        self.hp = self.maxHp
+        self.scoreReward = 4
+
+
+class Enemy3(Enemy):
+    '''
+    Creates a type 3 enemy.
+    '''
+    def __init__(self, coordinates: tuple, spawnDirection: list) -> None:
+        super().__init__(coordinates, spawnDirection)
+        self.r = 13
+        self.color = DARK_GREEN
+        self.moveDirection = spawnDirection
+        self.speed = 1
         self.maxHp = 3
         self.hp = self.maxHp
         self.scoreReward = 3
+
+
+class Enemy4(Enemy):
+    '''
+    Creates a type 4 enemy.
+    '''
+    def __init__(self, coordinates: tuple, spawnDirection: list) -> None:
+        super().__init__(coordinates, spawnDirection)
+        self.r = 8
+        self.color = WHITE
+        self.moveDirection = spawnDirection
+        self.speed = 8
+        self.maxHp = 1
+        self.hp = self.maxHp
+        self.scoreReward = 3
+
+
+class Boss1(Enemy):
+    '''
+    Creates a type 1 boss.
+    '''
+    def __init__(self, coordinates: tuple, spawnDirection: list) -> None:
+        super().__init__(coordinates, spawnDirection)
+        self.r = 40
+        self.color = RED
+        self.moveDirection = spawnDirection
+        self.speed = 0.5
+        self.maxHp = 40
+        self.hp = self.maxHp
+        self.scoreReward = 30
+
 
 
 class TodoListItem(object):

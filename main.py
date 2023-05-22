@@ -36,21 +36,20 @@ menuGameOverText = menuTitleFont.render("Game Over", True, BLACK)
 
 todoList = []
 
-todoList.append(TodoListItem("New enemies", ["Enemies"], "create a few more enemies and a boss or two."))
+todoList.append(TodoListItem("New enemies", ["Enemies"], "create a few more enemies and a boss or two.", "DONE"))
 todoList.append(TodoListItem("Attack patterns", ["Enemies"], "How should the enemy waves look like?"))
 todoList.append(TodoListItem("Player upgrades", ["Player"], "Upgrade bullet penetration and reload speed."))
-todoList.append(TodoListItem("Death screen", ["Menu"], "Show a game over screen."))
+todoList.append(TodoListItem("Death screen", ["Menu"], "Show a game over screen.", "DONE"))
 todoList.append(TodoListItem("Higscore", ["Higscore"], "Save highscores."))
 
 # todo
 
 
-buttons = []
+buttons = [ ]
 
 enemyList = [ ]
 bulletList = [ ]
 popFlashes = [ ]
-soundChannels = [ ]
 
 player = None
 crosshair = None
@@ -59,9 +58,10 @@ mapDirectionPoints = [[0, -1], [0, 1], [-1, 0], [1, 0]]  # up, down, left, right
 
 gameTick = 0
 score = 0
-playerHp = 50
-isDebugModeActive = False
+playerHp = 0
+bulletsShot = 0
 isMenuActive = True
+isGameReloadRequired = False
 
 
 def center(axis: str, item) -> float:
@@ -118,14 +118,17 @@ def init() -> None:
     introTuneSound.play()
 
 
-def start_new_game() -> None:
+def reload_game() -> None:
     '''
     Resets crucial game variables.
     '''
-    global score, playerHp
+    global score, playerHp, bulletsShot, player
 
     score = 0
     playerHp = 50
+    bulletsShot = 0
+
+    player = Player(MIDDLE_OF_SCREEN, 15, GREEN)
 
 
 def draw_menu() -> None:
@@ -133,9 +136,14 @@ def draw_menu() -> None:
     Creates and draws a menu and a GUI.
     '''
     menuTitleTextCoordinates = (center("x", menuTitleText), 60)
+    menuGameOverTextCoordinates = (center("x", menuGameOverText), 120)
 
     screen.fill(WHITE)
     screen.blit(menuTitleText, menuTitleTextCoordinates)
+
+    if playerHp == 0:
+        screen.blit(menuGameOverText, menuGameOverTextCoordinates)
+
     
     for button in buttons:
         button.blit_self()
@@ -244,11 +252,14 @@ def read_map_data() -> list:
 
 def spawn_bullet(playerCoords: tuple, crosshairCoords:tuple) -> None:
     ''' Creates a bullet at the player.'''
-    bulletList.append(Bullet(playerCoords, crosshairCoords, 5))  # TODO change 5 to upgrade value
+    global bulletsShot
+
+    bulletsShot += 1
+    bulletList.append(Bullet(playerCoords, crosshairCoords, 5, bulletsShot))  # TODO change 5 to upgrade value
     playerShotSound.play()
 
 
-def check_bullet_hit() -> None:
+def detect_bullets() -> None:
     '''
     Checks if a bullet has an enemy.
     '''
@@ -259,24 +270,29 @@ def check_bullet_hit() -> None:
             distance = get_distance(enemy.x, enemy.y, bullet.x, bullet.y)
 
             # Hit and hit cooldown detection
-            if distance < enemy.r:
-                if not enemy.hitCooldown:
+            if distance <= enemy.r:
+                if bullet.id not in enemy.bulletCooldown:
                     enemy.hp -= 1
                     bullet.pp -= 1
-                    enemy.hitCooldown = True
 
                     popFlashes.append(Pop_Flash((bullet.x, bullet.y), gameTick))
                     enemyHitSound.play()
+
+                    enemy.bulletCooldown.append(bullet.id)
 
                 if enemy.hp <= 0:
                     score += enemy.scoreReward
                     enemyList.remove(enemy)
                 
                 if bullet.pp <= 0:
+                    bulletIndex = enemy.bulletCooldown.index(bullet.id)
+                    enemy.bulletCooldown.pop(bulletIndex)
                     bulletList.remove(bullet)
-
+            
             else:
-                enemy.hitCooldown = False
+                if bullet.id in enemy.bulletCooldown:
+                    bulletIndex = enemy.bulletCooldown.index(bullet.id)
+                    enemy.bulletCooldown.pop(bulletIndex)
 
 
 def update_cursor() -> None:
@@ -301,17 +317,7 @@ def update_enemies() -> None:
     global playerHp
     for enemy in enemyList:
         for i, directionPoints in enumerate(mapData[1]):
-            
-            # if isDebugModeActive:
-            #     print()
-            #     print("mapData:", mapData)
-            #     print("mapData[1]:", mapData[1])
-            #     print("mapData[1][0]:", mapData[1][0])
-
             for point in directionPoints:
-                # if isDebugModeActive:
-                #     print("directionPoints", directionPoints)
-                #     print("point", point)
                 distance = get_distance(enemy.x, enemy.y, point[0], point[1])
                 if distance < 10:  # 10 because it's the default enemy radius
                     enemy.moveDirection = mapDirectionPoints[i]
@@ -319,8 +325,8 @@ def update_enemies() -> None:
 
         if out_of_bounds_check(enemy.x, enemy.y):
             enemyList.remove(enemy)
-            playerHp -= 1
-            print("playerHp -1")
+            playerHp -= enemy.maxHp
+            print("playerHp -", enemy.maxHp)
 
         enemy.movement()
         enemy.draw_self()
@@ -356,19 +362,15 @@ def run_game() -> None:
     Updates and draws screen.
     '''
     global playerHp
-    if isDebugModeActive:
-        screen.fill(BLACK)
-        screen.blit(gameMapConfig, (0,0))
 
-    else:
-        screen.blit(gameMap, (0,0))
+    screen.blit(gameMap, (0,0))
 
-    check_bullet_hit()
+    detect_bullets()
     
-    update_player()
-    update_cursor()
     update_enemies()
     update_bullets()
+    update_player()
+    update_cursor()
         
     # Draw pop flash
     for popFlash in popFlashes:
@@ -378,6 +380,25 @@ def run_game() -> None:
             popFlashes.remove(popFlash)
 
     update_game_state_text()
+    
+    if playerHp <= 0:
+        end_game()
+
+
+
+def end_game() -> None:
+    global enemyList, bulletList, popFlashes, player, isMenuActive
+
+    enemyList = [ ]
+    bulletList = [ ]
+    popFlashes = [ ]
+
+    player = None
+    isMenuActive = True
+    
+    isGameReloadRequired = True
+
+    
 
 
 # ========== Start ========== #
@@ -416,7 +437,9 @@ while appRunning:
                     buttonClickSound.play()
                     isMenuActive = False
                     pygame.mouse.set_visible(False)
-                    gameStartSound.play()            
+                    gameStartSound.play()
+                    reload_game()
+
 
         else:
             # Player shoot
@@ -446,6 +469,24 @@ while appRunning:
                 y = mapData[0][1]
 
                 enemyList.append(Enemy2(x, y))
+
+            elif keyHeldDown[pygame.K_3]:
+                x = mapData[0][0]
+                y = mapData[0][1]
+
+                enemyList.append(Enemy3(x, y))
+
+            elif keyHeldDown[pygame.K_4]:
+                x = mapData[0][0]
+                y = mapData[0][1]
+
+                enemyList.append(Enemy4(x, y))
+
+            elif keyHeldDown[pygame.K_0]:
+                x = mapData[0][0]
+                y = mapData[0][1]
+
+                enemyList.append(Boss1(x, y))
             #DEBUG END
 
     # Update screen
