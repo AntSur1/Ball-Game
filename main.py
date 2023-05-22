@@ -313,7 +313,7 @@ def update_enemies() -> None:
                 #     print("directionPoints", directionPoints)
                 #     print("point", point)
                 distance = get_distance(enemy.x, enemy.y, point[0], point[1])
-                if distance < enemy.r * 2 ** -1:
+                if distance < 10:  # 10 because it's the default enemy radius
                     enemy.moveDirection = mapDirectionPoints[i]
                     break
 
