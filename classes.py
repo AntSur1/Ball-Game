@@ -93,7 +93,7 @@ class Crosshair(object):
 
 class Dot(object):
     '''
-    Base entity texture.
+    Creates a bace entity.
     '''
     def __init__(self, coordinates: tuple, radius: int = 0, color: int = BLACK) -> None:
         self.x, self.y = coordinates
@@ -106,11 +106,10 @@ class Dot(object):
 
 class Player(Dot):
     '''
-    Playable character.
+    Creates a playable character.
     '''
     def __init__(self, coordinates: tuple, radius: int = 0, color: int = BLACK) -> None:
         super().__init__(coordinates, radius, color)
-        #! Who said something about stolen code ;)
         # Base speed factors
         self.speed = 1.3
         self.vx = 0
@@ -155,6 +154,10 @@ class Player(Dot):
         # Set new coordinates.
         self.x = newX
         self.y = newY
+
+    def draw_self(self) -> None:
+        pygame.draw.circle(screen, BLACK, (self.x, self.y), self.r)
+        pygame.draw.circle(screen, self.color, (self.x, self.y), self.r - 1)
 
 
 class Bullet(object):
@@ -331,9 +334,69 @@ class Enemy4(Enemy):
         self.scoreReward = 3
 
 
+class Enemy5(Enemy):
+    '''
+    Creates a type 5 enemy.
+    '''
+    def __init__(self, coordinates: tuple, spawnDirection: list) -> None:
+        super().__init__(coordinates, spawnDirection)
+        self.r = 12
+        self.color = YELLOW
+        self.moveDirection = spawnDirection
+        self.speed = 1.8
+        self.maxHp = 3
+        self.hp = self.maxHp
+        self.scoreReward = 4
+
+
+class Enemy6(Enemy):
+    '''
+    Creates a type 6 enemy.
+    '''
+    def __init__(self, coordinates: tuple, spawnDirection: list) -> None:
+        super().__init__(coordinates, spawnDirection)
+        self.r = 18
+        self.color = ORANGE
+        self.moveDirection = spawnDirection
+        self.speed = 1
+        self.maxHp = 15
+        self.hp = self.maxHp
+        self.scoreReward = 10
+
+
+class Enemy7(Enemy):
+    '''
+    Creates a type 7 enemy.
+    '''
+    def __init__(self, coordinates: tuple, spawnDirection: list) -> None:
+        super().__init__(coordinates, spawnDirection)
+        self.r = 10
+        self.color = AQUA
+        self.moveDirection = spawnDirection
+        self.speed = 1.5
+        self.maxHp = 4
+        self.hp = self.maxHp
+        self.scoreReward = 6
+
+
 class Boss1(Enemy):
     '''
     Creates a type 1 boss.
+    '''
+    def __init__(self, coordinates: tuple, spawnDirection: list) -> None:
+        super().__init__(coordinates, spawnDirection)
+        self.r = 30
+        self.color = PINK
+        self.moveDirection = spawnDirection
+        self.speed = 1
+        self.maxHp = 30
+        self.hp = self.maxHp
+        self.scoreReward = 30
+
+
+class Boss2(Enemy):
+    '''
+    Creates a type 2 boss.
     '''
     def __init__(self, coordinates: tuple, spawnDirection: list) -> None:
         super().__init__(coordinates, spawnDirection)
@@ -346,16 +409,31 @@ class Boss1(Enemy):
         self.scoreReward = 30
 
 
-
-class TodoListItem(object):
+class Boss3(Enemy):
     '''
-    Creates a to do list ite
+    Creates a type 3 boss.
     '''
-    def __init__(self, title: str, tags: list, description: str, solution: str = "") -> None:
-        self.title = title
-        self.tags = tags
-        self.description = description
-        self.solution = solution
+    def __init__(self, coordinates: tuple, spawnDirection: list) -> None:
+        super().__init__(coordinates, spawnDirection)
+        self.r = 50
+        self.color = BROWN
+        self.moveDirection = spawnDirection
+        self.speed = 0.3
+        self.maxHp = 60
+        self.hp = self.maxHp
+        self.scoreReward = 60
 
-    def __repr__(self) -> str:
-        return f"\n\n=== {self.title} === \n{self.tags} \n{self.description} \n{self.solution}"
+
+class Boss4(Enemy):
+    '''
+    Creates a type 4 boss.
+    '''
+    def __init__(self, coordinates: tuple, spawnDirection: list) -> None:
+        super().__init__(coordinates, spawnDirection)
+        self.r = 100
+        self.color = BLACK
+        self.moveDirection = spawnDirection
+        self.speed = 0.2
+        self.maxHp = 200
+        self.hp = self.maxHp
+        self.scoreReward = 200

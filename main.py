@@ -1,11 +1,12 @@
 import pygame
-from random import randint, randrange
+from threading import Timer
 from config import *
 from classes import *
 
 pygame.init()
 pygame.mixer.init()
 pygame.mixer.set_num_channels(30)
+pygame.key.set_repeat(500)
 
 pygame.display.set_caption("Ball Game")
 
@@ -21,6 +22,7 @@ gameStartSound = pygame.mixer.Sound('sounds/gameStart.wav')
 buttonClickSound = pygame.mixer.Sound('sounds/buttonClick.wav')
 enemyHitSound = pygame.mixer.Sound('sounds/enemyHit.wav')
 playerShotSound = pygame.mixer.Sound('sounds/playerShot.wav')
+gameOverSound = pygame.mixer.Sound('sounds/gameOver.wav')
 
 # Fonts
 gameStateFont = pygame.font.SysFont("Consolas", 30)
@@ -32,21 +34,7 @@ menuTitleText = menuTitleFont.render("Ball-Game", True, BLACK)
 menuGameOverText = menuTitleFont.render("Game Over", True, BLACK)
 
 
-# todo
-
-todoList = []
-
-todoList.append(TodoListItem("New enemies", ["Enemies"], "create a few more enemies and a boss or two.", "DONE"))
-todoList.append(TodoListItem("Attack patterns", ["Enemies"], "How should the enemy waves look like?"))
-todoList.append(TodoListItem("Player upgrades", ["Player"], "Upgrade bullet penetration and reload speed."))
-todoList.append(TodoListItem("Death screen", ["Menu"], "Show a game over screen.", "DONE"))
-todoList.append(TodoListItem("Higscore", ["Higscore"], "Save highscores."))
-
-# todo
-
-
-buttons = [ ]
-
+buttonList = [ ]
 enemyList = [ ]
 bulletList = [ ]
 popFlashes = [ ]
@@ -58,10 +46,10 @@ mapDirectionPoints = [[0, -1], [0, 1], [-1, 0], [1, 0]]  # up, down, left, right
 
 gameTick = 0
 score = 0
-playerHp = 0
+playerHp = 1
 bulletsShot = 0
+bulletPenetration = 1  # TODO upgrades?
 isMenuActive = True
-isGameReloadRequired = False
 
 
 def center(axis: str, item) -> float:
@@ -97,7 +85,7 @@ def init() -> None:
     '''
     Reads map config, creates the start menu, and calulates mouse and player start coordinates. 
     '''
-    global buttons, player, crosshair, mapData
+    global buttonList, player, crosshair, mapData
 
     # Reads map data
     screen.blit(gameMapConfig, (0,0))
@@ -108,7 +96,7 @@ def init() -> None:
     startButton = Button("Start", (0, SCREEN_HEIGHT // 2), "isMenuActive")
     startButton.blit_self()
     startButton.x = SCREEN_WIDTH / 2 - startButton.width / 2
-    buttons.append(startButton)
+    buttonList.append(startButton)
     
     pygame.mouse.set_pos(MIDDLE_OF_SCREEN)
 
@@ -122,11 +110,12 @@ def prepare_new_game() -> None:
     '''
     Resets crucial game variables.
     '''
-    global score, playerHp, bulletsShot, player
+    global score, playerHp, bulletsShot, bulletPenetration, player
 
     score = 0
     playerHp = 1
     bulletsShot = 0
+    bulletPenetration = 0
 
     player = Player(MIDDLE_OF_SCREEN, 15, GREEN)
 
@@ -145,7 +134,7 @@ def draw_menu() -> None:
         screen.blit(menuGameOverText, menuGameOverTextCoordinates)
 
     
-    for button in buttons:
+    for button in buttonList:
         button.blit_self()
 
 
@@ -250,21 +239,32 @@ def read_map_data() -> list:
     return mapData
 
 
-def generate_waves() -> list:
-    '''
-    Generates a wave of enemies.
-    '''
-    pass
-
-
-
 def spawn_bullet(playerCoords: tuple, crosshairCoords:tuple) -> None:
     ''' Creates a bullet at the player.'''
     global bulletsShot
 
     bulletsShot += 1
-    bulletList.append(Bullet(playerCoords, crosshairCoords, 5, bulletsShot))  # TODO change 5 to upgrade value
+    bulletList.append(Bullet(playerCoords, crosshairCoords, bulletPenetration, bulletsShot))
     playerShotSound.play()
+
+
+def spawn_enemy_wave(enemyType: object, ammountOfEnemies: int, delay: int) -> None:
+    '''
+    Spawns an enemy wave.
+    '''
+    def spawn_enemy(loop: int):
+        x = mapData[0][0]
+        y = mapData[0][1]
+
+        enemyList.append(enemyType(x, y))
+
+        # Schedule the next enemy spawn
+        if loop > 0:
+            t = Timer(delay / 1000, lambda: spawn_enemy(loop - 2))
+            t.start()
+
+    # Start the first enemy spawn
+    spawn_enemy(ammountOfEnemies)
 
 
 def detect_bullets() -> None:
@@ -354,15 +354,17 @@ def update_bullets() -> None:
             bulletList.remove(bullet)
 
 
-def update_game_state_text() -> None:
+def update_game_state_texts() -> None:
     '''
-    Updates game state text.
-    '''
-    
+    Updates game state texts.
+    '''    
     scoreText = gameStateFont.render(f"Score: {score}", True, WHITE)
     playerHpText = gameStateFont.render(f"Health: {playerHp}", True, WHITE)
-    screen.blit(scoreText, (10, 5))
-    screen.blit(playerHpText, (10, 35))
+
+    screenPaddingX = 10
+
+    screen.blit(scoreText, (screenPaddingX, 5))
+    screen.blit(playerHpText, (screenPaddingX, 35))
 
 
 def run_game() -> None:
@@ -387,7 +389,7 @@ def run_game() -> None:
         if popFlash.destructionTime <= gameTick:
             popFlashes.remove(popFlash)
 
-    update_game_state_text()
+    update_game_state_texts()
     
     if playerHp <= 0:
         end_game()
@@ -395,6 +397,8 @@ def run_game() -> None:
 
 def end_game() -> None:
     global enemyList, bulletList, popFlashes, player, isMenuActive
+    
+    gameOverSound.play()
 
     enemyList = [ ]
     bulletList = [ ]
@@ -402,10 +406,6 @@ def end_game() -> None:
 
     player = None
     isMenuActive = True
-    
-    isGameReloadRequired = True
-
-    
 
 
 # ========== Start ========== #
@@ -436,17 +436,20 @@ while appRunning:
             if event.key in [pygame.K_DELETE, pygame.K_ESCAPE]:
                 appRunning = False
 
+            # DEBUG
+            if event.key == pygame.K_l:
+                spawn_enemy_wave(Enemy1, 3, 500)
+            # DEBUG
 
         if isMenuActive:
             # Menu functionality
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                if buttons[0].background.collidepoint(event.pos):
+                if buttonList[0].background.collidepoint(event.pos):
                     buttonClickSound.play()
                     isMenuActive = False
                     pygame.mouse.set_visible(False)
                     gameStartSound.play()
                     prepare_new_game()
-
 
         else:
             # Player shoot
@@ -457,44 +460,65 @@ while appRunning:
                     crosshairCoordinates = (crosshair.x, crosshair.y)
                     spawn_bullet(playerCoordinates, crosshairCoordinates)
     
-            # DEBUG START
+            # Spawns enemies
             if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_p:
-                    isDebugModeActive = not isDebugModeActive
+                if keyHeldDown[pygame.K_HOME]:
+                    x = mapData[0][0]
+                    y = mapData[0][1]
 
-                if event.key == pygame.K_t:
-                    print(todoList)            
-            
-            if keyHeldDown[pygame.K_1]:
-                x = mapData[0][0]
-                y = mapData[0][1]
 
-                enemyList.append(Enemy1(x, y))
+                    # TODO Every base enemy should spawn 5 times every (enemy nr) seconds
+                    # Base enemies
+                    if event.key == pygame.K_1:
+                        enemyList.append(Enemy1(x, y))
 
-            elif keyHeldDown[pygame.K_2]:
-                x = mapData[0][0]
-                y = mapData[0][1]
+                    elif event.key == pygame.K_2:
+                        enemyList.append(Enemy2(x, y))
 
-                enemyList.append(Enemy2(x, y))
+                    elif event.key == pygame.K_3:
+                        enemyList.append(Enemy3(x, y))
 
-            elif keyHeldDown[pygame.K_3]:
-                x = mapData[0][0]
-                y = mapData[0][1]
+                    elif event.key == pygame.K_4:
+                        enemyList.append(Enemy4(x, y))
 
-                enemyList.append(Enemy3(x, y))
+                    elif event.key == pygame.K_5:
+                        enemyList.append(Enemy5(x, y))
 
-            elif keyHeldDown[pygame.K_4]:
-                x = mapData[0][0]
-                y = mapData[0][1]
+                    elif event.key == pygame.K_6:
+                        enemyList.append(Enemy6(x, y))
 
-                enemyList.append(Enemy4(x, y))
+                    elif event.key == pygame.K_7:
+                        enemyList.append(Enemy7(x, y))
 
-            elif keyHeldDown[pygame.K_0]:
-                x = mapData[0][0]
-                y = mapData[0][1]
+                    if False:
+                    # TODO 1 boss should spawn every 30 seconds. The boss spawns should look like: this
+                    # 1 nr1 
+                    # 2 nr1 
+                    # 3 nr1 
+                    # 1 nr2
+                    # 2 nr2
+                    # 2 nr2, 1 nr1
+                    # 2 nr2, 2 nr1
+                    # 1 nr3
+                    # 2 nr3
+                    # 2 nr3, 2 nr1
+                    # 2 nr3, 2 nr2, 2 nr1
+                    # 1 nr 3
+                        pass
 
-                enemyList.append(Boss1(x, y))
-            #DEBUG END
+                    # Bosses
+                    elif event.key == pygame.K_8:
+                        enemyList.append(Boss1(x, y))
+
+                    elif event.key == pygame.K_9:
+                        enemyList.append(Boss2(x, y))
+
+                    elif event.key == pygame.K_0:
+                        enemyList.append(Boss3(x, y))
+
+                    elif event.key == pygame.K_p:
+                        enemyList.append(Boss4(x, y))
+
 
     # Update screen
     pygame.display.flip()
