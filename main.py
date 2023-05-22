@@ -118,14 +118,14 @@ def init() -> None:
     introTuneSound.play()
 
 
-def reload_game() -> None:
+def prepare_new_game() -> None:
     '''
     Resets crucial game variables.
     '''
     global score, playerHp, bulletsShot, player
 
     score = 0
-    playerHp = 50
+    playerHp = 1
     bulletsShot = 0
 
     player = Player(MIDDLE_OF_SCREEN, 15, GREEN)
@@ -255,6 +255,7 @@ def generate_waves() -> list:
     Generates a wave of enemies.
     '''
     pass
+
 
 
 def spawn_bullet(playerCoords: tuple, crosshairCoords:tuple) -> None:
@@ -444,7 +445,7 @@ while appRunning:
                     isMenuActive = False
                     pygame.mouse.set_visible(False)
                     gameStartSound.play()
-                    reload_game()
+                    prepare_new_game()
 
 
         else:

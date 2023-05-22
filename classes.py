@@ -325,7 +325,7 @@ class Enemy4(Enemy):
         self.r = 8
         self.color = WHITE
         self.moveDirection = spawnDirection
-        self.speed = 8
+        self.speed = 2
         self.maxHp = 1
         self.hp = self.maxHp
         self.scoreReward = 3
