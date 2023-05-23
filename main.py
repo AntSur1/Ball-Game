@@ -3,20 +3,21 @@ from threading import Timer
 from config import *
 from classes import *
 
+# Init pygame
 pygame.init()
 pygame.mixer.init()
 pygame.mixer.set_num_channels(30)
 pygame.key.set_repeat(500)
-
 pygame.display.set_caption("Ball Game")
 
+# Init screen
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 
+# Init map
 gameMapConfig = pygame.image.load(f"maps/{GAME_MAP_NR}/game-map-config.png")
 gameMap = pygame.image.load(f"maps/{GAME_MAP_NR}/game-map.png")
 
-# todo PUT THIS SOMEWHERE ELSE ?
-# Sounds
+# Init sounds
 introTuneSound = pygame.mixer.Sound('sounds/introTune.wav')
 gameStartSound = pygame.mixer.Sound('sounds/gameStart.wav')
 buttonClickSound = pygame.mixer.Sound('sounds/buttonClick.wav')
@@ -24,16 +25,15 @@ enemyHitSound = pygame.mixer.Sound('sounds/enemyHit.wav')
 playerShotSound = pygame.mixer.Sound('sounds/playerShot.wav')
 gameOverSound = pygame.mixer.Sound('sounds/gameOver.wav')
 
-# Fonts
+# Init fonts
 gameStateFont = pygame.font.SysFont("Consolas", 30)
 menuTitleFont = pygame.font.SysFont("freesansbold", 64)
 
-# todo PUT THIS SOMEWHERE ELSE ?
-# Menu text 
+# Init menu texts
 menuTitleText = menuTitleFont.render("Ball-Game", True, BLACK)
 menuGameOverText = menuTitleFont.render("Game Over", True, BLACK)
 
-
+# Init globar variables
 buttonList = [ ]
 enemyList = [ ]
 bulletList = [ ]
@@ -54,6 +54,7 @@ reloadDoneBy = 1
 isMenuActive = True
 
 
+# Functions
 def center(axis: str, item) -> float:
     '''
     Takes in an axis and an item, and returns the coordinate the item will be centered on the coordinate axis.
@@ -279,7 +280,7 @@ def request_bullet_shoot() -> None:
 
 def spawn_enemy_wave(enemyType: object, ammountOfEnemies: int, delay: int) -> None:
     '''
-    Spawns an enemy wave.
+    Spawns an enemy wave. One enemyType ammountOfEnemies nr of times with a delay time delay.
     '''
     def spawn_enemy(loop: int):
         x = mapData[0][0]
@@ -382,7 +383,6 @@ def update_bullets() -> None:
     '''
     Updates and draws bullets.
     '''
-    # Draw bullets
     for bullet in bulletList:
         bullet.update()
         bullet.draw_self()
