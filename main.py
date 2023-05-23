@@ -48,7 +48,9 @@ gameTick = 0
 score = 0
 playerHp = 1
 bulletsShot = 0
-bulletPenetration = 1  # TODO upgrades?
+bulletPP = 1  # penetration points
+reloadSpeed = 100
+reloadDoneBy = 1
 isMenuActive = True
 
 
@@ -110,12 +112,13 @@ def prepare_new_game() -> None:
     '''
     Resets crucial game variables.
     '''
-    global score, playerHp, bulletsShot, bulletPenetration, player
+    global score, playerHp, bulletsShot, bulletPP, reloadSpeed, player
 
     score = 0
     playerHp = 1
     bulletsShot = 0
-    bulletPenetration = 0
+    bulletPP = 0
+    reloadSpeed = 200
 
     player = Player(MIDDLE_OF_SCREEN, 15, GREEN)
 
@@ -136,6 +139,19 @@ def draw_menu() -> None:
     
     for button in buttonList:
         button.blit_self()
+
+
+def menu_button_functionality() -> None:
+    '''
+    Adds functionality to the menu button
+    '''
+    global isMenuActive
+
+    buttonClickSound.play()
+    isMenuActive = False
+    pygame.mouse.set_visible(False)
+    gameStartSound.play()
+    prepare_new_game()
 
 
 def find_enemy_spawn() -> list:
@@ -205,21 +221,19 @@ def find_enemy_direction_points() -> list:
 
     for y in range(SCREEN_HEIGHT):
         for x in range(SCREEN_WIDTH):
-            coordinates = (x, y)
-
-            pixelColor = screen.get_at(coordinates)
+            pixelColor = screen.get_at((x, y))
 
             if pixelColor == GO_UP_COLOR:
-                changeDirectionData[0].append(coordinates)
+                changeDirectionData[0].append((x, y))
 
             if pixelColor == GO_DOWN_COLOR:
-                changeDirectionData[1].append(coordinates)
+                changeDirectionData[1].append((x, y))
 
             if pixelColor == GO_LEFT_COLOR:
-                changeDirectionData[2].append(coordinates)
+                changeDirectionData[2].append((x, y))
 
             if pixelColor == GO_RIGHT_COLOR:
-                changeDirectionData[3].append(coordinates)
+                changeDirectionData[3].append((x, y))
 
     return changeDirectionData
 
@@ -244,8 +258,23 @@ def spawn_bullet(playerCoords: tuple, crosshairCoords:tuple) -> None:
     global bulletsShot
 
     bulletsShot += 1
-    bulletList.append(Bullet(playerCoords, crosshairCoords, bulletPenetration, bulletsShot))
+    bulletList.append(Bullet(playerCoords, crosshairCoords, bulletPP, bulletsShot))
     playerShotSound.play()
+
+
+def request_bullet_shoot() -> None:
+    '''
+    Checks if a bullet is ready to be fired. 
+    If it is it prepares the coordinates and shoots a bullet.
+    '''
+    global reloadDoneBy
+
+    if reloadDoneBy <= gameTick:
+        playerCoordinates = (player.x, player.y)
+        crosshairCoordinates = (crosshair.x, crosshair.y)
+        spawn_bullet(playerCoordinates, crosshairCoordinates)
+
+        reloadDoneBy = gameTick + reloadSpeed
 
 
 def spawn_enemy_wave(enemyType: object, ammountOfEnemies: int, delay: int) -> None:
@@ -312,10 +341,18 @@ def update_cursor() -> None:
 
 def update_player() -> None:
     '''
-    Updates player.
+    Updates the player.
     '''
     player.movement(keyHeldDown)
     player.draw_self()
+    player.draw_reload_bar(gameTick, reloadDoneBy)
+
+    if score >= UPGRADE_COST:
+        if bulletPP <= MAX_BULLET_PP:
+            player.draw_penetration_upgrade_feedback()
+
+        if reloadSpeed >= MIN_RELOAD_SPEED:
+            player.draw_reload_upgrade_feedback()
 
 
 def update_enemies() -> None:
@@ -349,27 +386,14 @@ def update_bullets() -> None:
     for bullet in bulletList:
         bullet.update()
         bullet.draw_self()
-        
+
         if out_of_bounds_check(bullet.x, bullet.y):
             bulletList.remove(bullet)
 
 
-def update_game_state_texts() -> None:
-    '''
-    Updates game state texts.
-    '''    
-    scoreText = gameStateFont.render(f"Score: {score}", True, WHITE)
-    playerHpText = gameStateFont.render(f"Health: {playerHp}", True, WHITE)
-
-    screenPaddingX = 10
-
-    screen.blit(scoreText, (screenPaddingX, 5))
-    screen.blit(playerHpText, (screenPaddingX, 35))
-
-
 def run_game() -> None:
     '''
-    Updates and draws screen.
+    Updates and draws screen all sprites on screen.
     '''
     global playerHp
 
@@ -396,6 +420,9 @@ def run_game() -> None:
 
 
 def end_game() -> None:
+    '''
+    Ends the current game session and opens the menu.
+    '''
     global enemyList, bulletList, popFlashes, player, isMenuActive
     
     gameOverSound.play()
@@ -406,6 +433,109 @@ def end_game() -> None:
 
     player = None
     isMenuActive = True
+    pygame.mouse.set_visible(True)
+
+
+def update_game_state_texts() -> None:
+    '''
+    Updates game state texts.
+    '''    
+    scoreText = gameStateFont.render(f"Score: {score}", True, WHITE)
+    playerHpText = gameStateFont.render(f"Health: {playerHp}", True, WHITE)
+
+    screenPaddingX = 10
+
+    screen.blit(scoreText, (screenPaddingX, 5))
+    screen.blit(playerHpText, (screenPaddingX, 35))
+
+
+def request_reload_upgrade() -> None:
+    '''
+    Checks if upgrading the reload speed is possible.
+    '''
+    global reloadSpeed, score
+
+    if score >= UPGRADE_COST:
+        if reloadSpeed >= MIN_RELOAD_SPEED:
+            score -= UPGRADE_COST
+            reloadSpeed -= RELOAD_REDUCTION
+
+
+def request_bullet_pp_upgrade() -> None:
+    '''
+    Checks if upgrading the bullet pp is possible.
+    '''
+    global bulletPP, score
+
+    if score >= UPGRADE_COST:
+        if bulletPP >= MAX_BULLET_PP:
+            score -= UPGRADE_COST
+            bulletPP += 1
+
+
+def cheat_controls(inputKey: int):
+    '''
+    Checks what secret chet key combination was clicked and runs the secret command.
+    '''
+    # Give score
+    global score
+
+    if inputKey == pygame.K_l:
+        score += 1
+
+    # Spawn base enemies
+    x = mapData[0][0]
+    y = mapData[0][1]
+
+    if inputKey == pygame.K_1:
+        enemyList.append(Enemy1(x, y))
+
+    elif inputKey == pygame.K_2:
+        enemyList.append(Enemy2(x, y))
+
+    elif inputKey == pygame.K_3:
+        enemyList.append(Enemy3(x, y))
+
+    elif inputKey == pygame.K_4:
+        enemyList.append(Enemy4(x, y))
+
+    elif inputKey == pygame.K_5:
+        enemyList.append(Enemy5(x, y))
+
+    elif inputKey == pygame.K_6:
+        enemyList.append(Enemy6(x, y))
+
+    elif inputKey == pygame.K_7:
+        enemyList.append(Enemy7(x, y))
+
+    if False:
+    # TODO 1 boss should spawn every 30 seconds. The boss spawns should look like: this
+    # 1 nr1 
+    # 2 nr1 
+    # 3 nr1 
+    # 1 nr2
+    # 2 nr2
+    # 2 nr2, 1 nr1
+    # 2 nr2, 2 nr1
+    # 1 nr3
+    # 2 nr3
+    # 2 nr3, 2 nr1
+    # 2 nr3, 2 nr2, 2 nr1
+    # 1 nr 3
+        pass
+
+    # Spawn bosses
+    elif inputKey == pygame.K_8:
+        enemyList.append(Boss1(x, y))
+
+    elif inputKey == pygame.K_9:
+        enemyList.append(Boss2(x, y))
+
+    elif inputKey == pygame.K_0:
+        enemyList.append(Boss3(x, y))
+
+    elif inputKey == pygame.K_p:
+        enemyList.append(Boss4(x, y))
 
 
 # ========== Start ========== #
@@ -417,14 +547,12 @@ while appRunning:
     gameTick += 1
     keyHeldDown = pygame.key.get_pressed()
     
-    # Check if a menu is active or not.
+    # Check if a menu is active or not
     if isMenuActive:
-        pygame.mouse.set_visible(True)
         draw_menu()
     
     else:
         run_game()
-
 
     # Detect events
     for event in pygame.event.get():
@@ -436,88 +564,30 @@ while appRunning:
             if event.key in [pygame.K_DELETE, pygame.K_ESCAPE]:
                 appRunning = False
 
-            # DEBUG
-            if event.key == pygame.K_l:
-                spawn_enemy_wave(Enemy1, 3, 500)
-            # DEBUG
-
         if isMenuActive:
-            # Menu functionality
+            # Gives the menu button functionality
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 if buttonList[0].background.collidepoint(event.pos):
-                    buttonClickSound.play()
-                    isMenuActive = False
-                    pygame.mouse.set_visible(False)
-                    gameStartSound.play()
-                    prepare_new_game()
+                    menu_button_functionality()
 
         else:
-            # Player shoot
+            # Checks for bullet shoot key
             if event.type == pygame.MOUSEBUTTONDOWN:
                 mousePresses = pygame.mouse.get_pressed()
                 if mousePresses[0]:
-                    playerCoordinates = (player.x, player.y)
-                    crosshairCoordinates = (crosshair.x, crosshair.y)
-                    spawn_bullet(playerCoordinates, crosshairCoordinates)
+                    request_bullet_shoot()
     
-            # Spawns enemies
             if event.type == pygame.KEYDOWN:
+                # Checks for upgrade keys
+                if event.key == pygame.K_o:
+                    request_reload_upgrade()
+
+                if event.key == pygame.K_p:
+                    request_bullet_pp_upgrade()
+
+                # Checks for cheat keys
                 if keyHeldDown[pygame.K_HOME]:
-                    x = mapData[0][0]
-                    y = mapData[0][1]
-
-
-                    # TODO Every base enemy should spawn 5 times every (enemy nr) seconds
-                    # Base enemies
-                    if event.key == pygame.K_1:
-                        enemyList.append(Enemy1(x, y))
-
-                    elif event.key == pygame.K_2:
-                        enemyList.append(Enemy2(x, y))
-
-                    elif event.key == pygame.K_3:
-                        enemyList.append(Enemy3(x, y))
-
-                    elif event.key == pygame.K_4:
-                        enemyList.append(Enemy4(x, y))
-
-                    elif event.key == pygame.K_5:
-                        enemyList.append(Enemy5(x, y))
-
-                    elif event.key == pygame.K_6:
-                        enemyList.append(Enemy6(x, y))
-
-                    elif event.key == pygame.K_7:
-                        enemyList.append(Enemy7(x, y))
-
-                    if False:
-                    # TODO 1 boss should spawn every 30 seconds. The boss spawns should look like: this
-                    # 1 nr1 
-                    # 2 nr1 
-                    # 3 nr1 
-                    # 1 nr2
-                    # 2 nr2
-                    # 2 nr2, 1 nr1
-                    # 2 nr2, 2 nr1
-                    # 1 nr3
-                    # 2 nr3
-                    # 2 nr3, 2 nr1
-                    # 2 nr3, 2 nr2, 2 nr1
-                    # 1 nr 3
-                        pass
-
-                    # Bosses
-                    elif event.key == pygame.K_8:
-                        enemyList.append(Boss1(x, y))
-
-                    elif event.key == pygame.K_9:
-                        enemyList.append(Boss2(x, y))
-
-                    elif event.key == pygame.K_0:
-                        enemyList.append(Boss3(x, y))
-
-                    elif event.key == pygame.K_p:
-                        enemyList.append(Boss4(x, y))
+                    cheat_controls(event.key)
 
 
     # Update screen

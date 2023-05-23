@@ -65,7 +65,6 @@ class Button(object):
         screen.blit(self.renderedText, (self.x, self.y))
 
 
-
 class Crosshair(object):
     '''
     Creates a movable croshair.
@@ -159,6 +158,52 @@ class Player(Dot):
         pygame.draw.circle(screen, BLACK, (self.x, self.y), self.r)
         pygame.draw.circle(screen, self.color, (self.x, self.y), self.r - 1)
 
+    def draw_reload_bar(self, gameTicks, doneBy) -> None:
+        if doneBy > gameTicks:
+            ticksLeft = doneBy - gameTicks
+        else:
+            ticksLeft = 0
+
+        ticksLeftPrecentage = ticksLeft / 200
+
+        x = self.x - 20 
+        y = self.y + self.r + 10
+        width = 40
+        height = 5
+
+        pygame.draw.rect(screen, BLACK, (
+            (x - 1 , y - 1),
+            (width + 2, height + 2)
+        ))
+
+        pygame.draw.rect(screen, GRAY, (
+            (x, y),
+            (width, height)
+        ))
+
+        pygame.draw.rect(screen, LIGHT_GRAY, (
+            (x, y),
+            (width * ( 1 - ticksLeftPrecentage ), height)
+        ))
+
+    def draw_penetration_upgrade_feedback(self) -> None:
+        x = self.x - 20
+        y = self.y + self.r + 10
+        width = 2
+        height = 5
+
+        pygame.draw.rect(screen, GREEN, (
+            (x, y), (width, height)))
+
+    def draw_reload_upgrade_feedback(self) -> None:
+        x = self.x - 20
+        y = self.y + self.r + 10
+        width = 2
+        height = 5
+
+        pygame.draw.rect(screen, BLUE, (
+            (x + width, y), (width, height)))
+
 
 class Bullet(object):
     '''
@@ -171,35 +216,35 @@ class Bullet(object):
         self.width = 5
         self.height = self.width
         self.color = YELLOW
-        self.spawnAngle = calculate_angle(coordinates, targetCoordinates)  # Different from bulletAngle for some reason.
+        self.spawnAngle = calculate_angle((self.x, self.y), targetCoordinates)  # Different from bulletAngle for some reason
         self.speed = 5
         self.bulletAngle = math.atan2(self.ty - self.y, self.tx - self.x)
         self.id = bulletID
 
-        # Spawn a new bullet.
+        # Spawn a new bullet
         self.surface = pygame.Surface((self.width, self.height))
         self.surface.set_colorkey((0, 0, 0))
         self.surface.fill(self.color)
         self.rect = self.surface.get_rect()
 
-        # Rotate the bullet.
+        # Rotate the bullet
         oldCenter = self.rect.center
-        self.new = pygame.transform.rotate(self.surface, self.spawnAngle)
-        self.rect = self.new.get_rect()
+        self.newSurface = pygame.transform.rotate(self.surface, self.spawnAngle)
+        self.rect = self.newSurface.get_rect()
         self.rect.center = oldCenter
 
     def update(self) -> None:
-        # Move bullet based on its rotation.
+        # Move bullet based on its rotation
         self.x += math.cos(self.bulletAngle) * self.speed
         self.y += math.sin(self.bulletAngle) * self.speed
 
     def draw_self(self) -> None:
-        # Redraw bullet.
+        # Redraw bullet
         self.surface.fill(self.color)
         self.rect = self.surface.get_rect()
         self.rect.center = (self.x, self.y)
 
-        screen.blit(self.new, self.rect)
+        screen.blit(self.newSurface, self.rect)
 
 
 class Pop_Flash(object):
@@ -207,23 +252,23 @@ class Pop_Flash(object):
     Creates a shortlived enemy hit effect.
     '''
     def __init__(self, coordinates: tuple, currentTime: int = 0) -> None:
-        self.coordinates = coordinates
+        self.x, self.y = coordinates
         self.visibleTime = 5
         self.destructionTime = currentTime + self.visibleTime
         self.size = 5
         self.indent = 3
         self.points = (
-            (coordinates[0] - self.size, coordinates[1]),
-            (coordinates[0] - self.size / self.indent, coordinates[1] + self.size / self.indent),
+            (self.x - self.size, self.y),
+            (self.x - self.size / self.indent, self.y + self.size / self.indent),
 
-            (coordinates[0], coordinates[1] + self.size),
-            (coordinates[0] + self.size / self.indent, coordinates[1] + self.size / self.indent),
+            (self.x, self.y + self.size),
+            (self.x + self.size / self.indent, self.y + self.size / self.indent),
 
-            (coordinates[0] + self.size, coordinates[1]),
-            (coordinates[0] + self.size / self.indent, coordinates[1] - self.size / self.indent),
+            (self.x + self.size, self.y),
+            (self.x + self.size / self.indent, self.y - self.size / self.indent),
             
-            (coordinates[0], coordinates[1] - self.size),
-            (coordinates[0] - self.size / self.indent, coordinates[1] - self.size / self.indent)
+            (self.x, self.y - self.size),
+            (self.x - self.size / self.indent, self.y - self.size / self.indent)
         )
     
     def self_draw(self) -> None:
@@ -251,7 +296,7 @@ class Enemy(Dot):
 
     def draw_health_bar(self) -> None:
         hpLost = self.maxHp - self.hp
-        hpLost = hpLost / self.maxHp
+        hpLostPrecentage = hpLost / self.maxHp
 
         x = self.x - 20 
         y = self.y - self.r  - 15
@@ -270,7 +315,7 @@ class Enemy(Dot):
 
         pygame.draw.rect(screen, GREEN, (
             (x, y),
-            (width * ( 1 - hpLost ), height)
+            (width * ( 1 - hpLostPrecentage ), height)
         ))
 
 
