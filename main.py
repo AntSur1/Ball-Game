@@ -46,12 +46,12 @@ mapDirectionPoints = [[0, -1], [0, 1], [-1, 0], [1, 0]]  # up, down, left, right
 
 gameTick = 0
 score = 0
-playerHp = 1
+playerHp = START_HP
 wave = 0
 
 bulletsShot = 0
-bulletPP = 1  # penetration points
-reloadSpeed = 100
+bulletPP = START_BULLET_PP  # penetration points
+reloadSpeed = START_RELOAD_SPEED
 reloadDoneBy = 1
 isMenuActive = True
 
@@ -118,11 +118,12 @@ def prepare_new_game() -> None:
     global score, playerHp, wave, bulletsShot, bulletPP, reloadSpeed, player
 
     score = 0
-    playerHp = 1
+    playerHp = START_HP
     wave = 0
+
     bulletsShot = 0
-    bulletPP = 0
-    reloadSpeed = 200
+    bulletPP = START_BULLET_PP  
+    reloadSpeed = START_RELOAD_SPEED
 
     player = Player(MIDDLE_OF_SCREEN, 15, GREEN)
 
@@ -302,14 +303,18 @@ def create_enemy_attack(enemyType: object, ammountOfEnemies: int, delay: int) ->
 
 def generate_waves() -> list:
     '''
-    Generates a wave of enemies.
+    Generates waves of enemies.
     '''
-    pass
+
+    # Spawn enemy wave
+    # if no enemies left:
+    # schedule next wave in 10 sec
+    # TODO: COME UP WITH HOW DO THE WAVES LOOK LIKE YOU PROCRASTINATING DUMMY!
 
 
-def detect_bullets() -> None:
+def detect_bullet_hit() -> None:
     '''
-    Checks if a bullet has an enemy.
+    Checks if a bullet has hit an enemy.
     '''
     global score
 
@@ -409,7 +414,8 @@ def run_game() -> None:
 
     screen.blit(gameMap, (0,0))
 
-    detect_bullets()
+    detect_bullet_hit()
+    generate_waves()
     
     update_enemies()
     update_bullets()
@@ -482,7 +488,7 @@ def request_bullet_pp_upgrade() -> None:
     global bulletPP, score
 
     if score >= UPGRADE_COST:
-        if bulletPP >= MAX_BULLET_PP:
+        if bulletPP <= MAX_BULLET_PP:
             score -= UPGRADE_COST
             bulletPP += 1
 
@@ -598,6 +604,7 @@ while appRunning:
                     request_reload_upgrade()
 
                 if event.key == pygame.K_p:
+                    print("p")
                     request_bullet_pp_upgrade()
 
                 # Checks for cheat keys
