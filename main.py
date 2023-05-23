@@ -47,6 +47,8 @@ mapDirectionPoints = [[0, -1], [0, 1], [-1, 0], [1, 0]]  # up, down, left, right
 gameTick = 0
 score = 0
 playerHp = 1
+wave = 0
+
 bulletsShot = 0
 bulletPP = 1  # penetration points
 reloadSpeed = 100
@@ -113,10 +115,11 @@ def prepare_new_game() -> None:
     '''
     Resets crucial game variables.
     '''
-    global score, playerHp, bulletsShot, bulletPP, reloadSpeed, player
+    global score, playerHp, wave, bulletsShot, bulletPP, reloadSpeed, player
 
     score = 0
     playerHp = 1
+    wave = 0
     bulletsShot = 0
     bulletPP = 0
     reloadSpeed = 200
@@ -278,9 +281,9 @@ def request_bullet_shoot() -> None:
         reloadDoneBy = gameTick + reloadSpeed
 
 
-def spawn_enemy_wave(enemyType: object, ammountOfEnemies: int, delay: int) -> None:
+def create_enemy_attack(enemyType: object, ammountOfEnemies: int, delay: int) -> None:
     '''
-    Spawns an enemy wave. One enemyType ammountOfEnemies nr of times with a delay time delay.
+    Spawns an enemy attack. One enemyType ammountOfEnemies nr of times with a delay time delay.
     '''
     def spawn_enemy(loop: int):
         x = mapData[0][0]
@@ -295,6 +298,13 @@ def spawn_enemy_wave(enemyType: object, ammountOfEnemies: int, delay: int) -> No
 
     # Start the first enemy spawn
     spawn_enemy(ammountOfEnemies)
+
+
+def generate_waves() -> list:
+    '''
+    Generates a wave of enemies.
+    '''
+    pass
 
 
 def detect_bullets() -> None:
@@ -442,11 +452,15 @@ def update_game_state_texts() -> None:
     '''    
     scoreText = gameStateFont.render(f"Score: {score}", True, WHITE)
     playerHpText = gameStateFont.render(f"Health: {playerHp}", True, WHITE)
+    waveText = gameStateFont.render(f"Wave: {wave}", True, WHITE)
 
     screenPaddingX = 10
 
     screen.blit(scoreText, (screenPaddingX, 5))
     screen.blit(playerHpText, (screenPaddingX, 35))
+
+    waveTextX = SCREEN_WIDTH - waveText.get_width() - screenPaddingX
+    screen.blit(waveText, ( waveTextX, 5))
 
 
 def request_reload_upgrade() -> None:
@@ -556,10 +570,11 @@ while appRunning:
 
     # Detect events
     for event in pygame.event.get():
+        # Exit game
         if event.type == pygame.QUIT:
             appRunning = False
 
-        # Exit game
+        # Send program close sygnal
         if event.type == pygame.KEYDOWN:
             if event.key in [pygame.K_DELETE, pygame.K_ESCAPE]:
                 appRunning = False
