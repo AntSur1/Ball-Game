@@ -52,6 +52,7 @@ gameTick = 0
 score = 0
 playerHp = START_HP
 wave = 0
+isNextWaveScheduled = False
 
 bulletsShot = 0
 bulletPP = START_BULLET_PP  # penetration points
@@ -115,21 +116,24 @@ def init() -> None:
     introTuneSound.play()
 
 
-def prepare_new_game() -> None:
+def new_game_init() -> None:
     '''
     Resets crucial game variables.
     '''
-    global score, playerHp, wave, bulletsShot, bulletPP, reloadSpeed, player
+    global score, playerHp, wave, isNextWaveScheduled, nextWave, bulletsShot, bulletPP, reloadSpeed, player
 
     score = 0
     playerHp = START_HP
     wave = 0
+    isNextWaveScheduled = True
+    nextWave = gameTick + WAVE_COOLDOWN
 
     bulletsShot = 0
     bulletPP = START_BULLET_PP  
     reloadSpeed = START_RELOAD_SPEED
 
     player = Player(MIDDLE_OF_SCREEN, 15, GREEN)
+
 
 
 def draw_menu() -> None:
@@ -142,6 +146,7 @@ def draw_menu() -> None:
     screen.fill(WHITE)
     screen.blit(menuTitleText, menuTitleTextCoordinates)
 
+    # Draws the game tips
     # Since the tip messages are long they will generate over multiple instances.
     tipMessage1 = ["Tip: pressing \"O\" when there's a green bar on the reload bar", "when you gained 20 or more points will decrese your reload speed!"]
     tipMessage2 = ["Tip: pressing \"P\" when there's a blue bar on the reload bar when you gave", "gained more than 20 points will increse your bullets penetration points."]
@@ -163,7 +168,6 @@ def draw_menu() -> None:
 
         textY -= padding
         
-
     if playerHp == 0:
         screen.blit(menuGameOverText, menuGameOverTextCoordinates)
 
@@ -171,9 +175,9 @@ def draw_menu() -> None:
         button.blit_self()
 
 
-def menu_button_functionality() -> None:
+def start_game() -> None:
     '''
-    Adds functionality to the menu button
+    Starts the game.
     '''
     global isMenuActive
 
@@ -181,7 +185,7 @@ def menu_button_functionality() -> None:
     isMenuActive = False
     pygame.mouse.set_visible(False)
     gameStartSound.play()
-    prepare_new_game()
+    new_game_init()
 
 
 def find_enemy_spawn() -> list:
@@ -326,16 +330,37 @@ def create_enemy_attack(enemyType: object, ammountOfEnemies: int, delay: int) ->
     spawn_enemy(ammountOfEnemies)
 
 
-def generate_waves() -> list:
+def generate_enemy_waves() -> list:
     '''
     Generates waves of enemies.
     '''
+    global wave, nextWave, isNextWaveScheduled
 
-    # Spawn enemy wave
-    # if no enemies left:
-    # schedule next wave in 10 sec
-    # TODO: COME UP WITH HOW DO THE WAVES LOOK LIKE YOU PROCRASTINATING DUMMY!
-    pass
+    # Shedules next wave attack.
+    if not isNextWaveScheduled and len( enemyList ) == 0:
+        nextWave = gameTick + WAVE_COOLDOWN
+        print("gameTick", gameTick, ", nextWave", nextWave)
+
+        isNextWaveScheduled = True
+
+    # Creates next wave when it's time.
+    if gameTick == nextWave:
+        if wave == 0:
+            create_enemy_attack(Enemy1, 5, 500)
+
+        if wave == 1:
+            create_enemy_attack(Enemy1, 8, 500)
+
+        if wave == 2:
+            create_enemy_attack(Enemy1, 12, 500)
+
+        if wave == 3:
+            create_enemy_attack(Enemy1, 8, 500)
+            create_enemy_attack(Enemy2, 3, 800)
+
+        print("Wave", wave)
+        isNextWaveScheduled = False
+        wave += 1
 
 
 def detect_bullet_hit() -> None:
@@ -441,13 +466,14 @@ def run_game() -> None:
     screen.blit(gameMap, (0,0))
 
     detect_bullet_hit()
-    generate_waves()
     
     update_enemies()
     update_bullets()
     update_player()
     update_cursor()
         
+    generate_enemy_waves()
+
     # Draw pop flash
     for popFlash in popFlashes:
         popFlash.self_draw()
@@ -615,7 +641,7 @@ while appRunning:
             # Gives the menu button functionality
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 if buttonList[0].background.collidepoint(event.pos):
-                    menu_button_functionality()
+                    start_game()
 
         else:
             # Checks for bullet shoot key
