@@ -45,7 +45,7 @@ class Button(object):
                                                                   self.width + 2 * self.paddingX,
                                                                   self.height + 2 * self.paddingY), 0, 2)
 
-    def blit_self(self):
+    def draw_self(self):
         # Check if mouse is over button
         if self.background.collidepoint(pygame.mouse.get_pos()):
             # Change button color
@@ -110,10 +110,10 @@ class Player(Dot):
     def __init__(self, coordinates: tuple, radius: int = 0, color: int = BLACK) -> None:
         super().__init__(coordinates, radius, color)
         # Base speed factors
-        self.speed = 1.3
+        self.speed = 1
         self.vx = 0
         self.vy = 0
-        self.friction = 0.13
+        self.friction = 0.18
     
     def movement(self, key) -> None:
         if key[pygame.K_w]:
@@ -158,13 +158,13 @@ class Player(Dot):
         pygame.draw.circle(screen, BLACK, (self.x, self.y), self.r)
         pygame.draw.circle(screen, self.color, (self.x, self.y), self.r - 1)
 
-    def draw_reload_bar(self, gameTicks, doneBy) -> None:
+    def draw_reload_bar(self, gameTicks, doneBy, currentReloadSpeed) -> None:
         if doneBy > gameTicks:
             ticksLeft = doneBy - gameTicks
         else:
             ticksLeft = 0
 
-        ticksLeftPrecentage = ticksLeft / 200
+        ticksLeftPrecentage = ticksLeft / currentReloadSpeed
 
         x = self.x - 20 
         y = self.y + self.r + 10

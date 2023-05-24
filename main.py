@@ -33,6 +33,7 @@ menuTipFont = pygame.font.SysFont("freesansbold", 24)
 # Init menu texts
 menuTitleText = menuTitleFont.render("Ball-Game", True, BLACK)
 menuGameOverText = menuTitleFont.render("Game Over", True, BLACK)
+youWonText = menuTitleFont.render("Congratulations. You won!", True, GREEN)
 
 menuTipText1 = menuTipFont.render("", True, BLACK)
 menuTipText2 = menuTipFont.render("", True, BLACK)
@@ -53,6 +54,7 @@ score = 0
 playerHp = START_HP
 wave = 0
 isNextWaveScheduled = False
+isGameWon = False
 
 bulletsShot = 0
 bulletPP = START_BULLET_PP  # penetration points
@@ -100,51 +102,66 @@ def init() -> None:
     # Reads map data
     screen.blit(gameMapConfig, (0,0))
     mapData = read_map_data()
-    #print(mapData)
 
-    # Creates a start button and centers it.
+    # Creates a start button and draws it on the screen
     startButton = Button("Start", (0, SCREEN_HEIGHT // 2), "isMenuActive")
-    startButton.blit_self()
+    startButton.draw_self()  # Draws it once to calculate width
     startButton.x = SCREEN_WIDTH / 2 - startButton.width / 2
     buttonList.append(startButton)
     
+    # Sets mous coords
     pygame.mouse.set_pos(MIDDLE_OF_SCREEN)
 
-    player = Player(MIDDLE_OF_SCREEN, 15, GREEN)
-    crosshair = Crosshair(MIDDLE_OF_SCREEN)
-
+    # Feedback to user
     introTuneSound.play()
 
 
 def new_game_init() -> None:
     '''
-    Resets crucial game variables.
+    Resets crucial game variables for a new game session.
     '''
-    global score, playerHp, wave, isNextWaveScheduled, nextWave, bulletsShot, bulletPP, reloadSpeed, player
+    global score, playerHp, wave, isNextWaveScheduled, nextWave, isGameWon, bulletsShot, bulletPP, reloadSpeed, player, crosshair
 
     score = 0
     playerHp = START_HP
     wave = 0
     isNextWaveScheduled = True
     nextWave = gameTick + WAVE_COOLDOWN
+    isGameWon = False
 
     bulletsShot = 0
     bulletPP = START_BULLET_PP  
     reloadSpeed = START_RELOAD_SPEED
 
     player = Player(MIDDLE_OF_SCREEN, 15, GREEN)
-
+    crosshair = Crosshair(MIDDLE_OF_SCREEN)
 
 
 def draw_menu() -> None:
     '''
-    Creates and draws a menu and a GUI.
+    Preps and draws the game menu.
     '''
-    menuTitleTextCoordinates = (center("x", menuTitleText), 60)
-    menuGameOverTextCoordinates = (center("x", menuGameOverText), 120)
+    padding = 90
+    
+    # Prepares potential menu headings
+    menuTitleTextCoords = (center("x", menuTitleText), 60)
+    menuGameOverTextCoords = (center("x", menuGameOverText), menuTitleTextCoords[1] + padding)
+    youWonTextCoords = (center("x", youWonText), menuTitleTextCoords[1] + padding)
 
+    # Draws the title and an game over text if player has died.
     screen.fill(WHITE)
-    screen.blit(menuTitleText, menuTitleTextCoordinates)
+    screen.blit(menuTitleText, menuTitleTextCoords)
+
+    if playerHp == 0:
+        if isGameWon:
+            screen.blit(youWonText, youWonTextCoords)
+
+        else:
+            screen.blit(menuGameOverText, menuGameOverTextCoords)
+
+    # Draws buttons
+    for button in buttonList:
+        button.draw_self()
 
     # Draws the game tips
     # Since the tip messages are long they will generate over multiple instances.
@@ -153,26 +170,18 @@ def draw_menu() -> None:
 
     # The ones further right will be drawn higher up.
     tipMessages = [tipMessage1, tipMessage2]
-
     rowSpacing = 35
-    padding = 90
-    textY = SCREEN_HEIGHT - padding
+    tipMessageY = SCREEN_HEIGHT - padding
 
     # Draws the messages from te bottom of the screen up.
     for tipMessage in tipMessages:
         for messagePart in tipMessage:
             menuTipText = menuTipFont.render(messagePart, True, BLACK)
             x = center("x", menuTipText)
-            textY -=  menuTipText.get_height() - rowSpacing
-            screen.blit(menuTipText, (x, textY))
+            tipMessageY -=  menuTipText.get_height() - rowSpacing
+            screen.blit(menuTipText, (x, tipMessageY))
 
-        textY -= padding
-        
-    if playerHp == 0:
-        screen.blit(menuGameOverText, menuGameOverTextCoordinates)
-
-    for button in buttonList:
-        button.blit_self()
+        tipMessageY -= padding     
 
 
 def start_game() -> None:
@@ -180,6 +189,7 @@ def start_game() -> None:
     Starts the game.
     '''
     global isMenuActive
+    print("Started new game session")
 
     buttonClickSound.play()
     isMenuActive = False
@@ -190,14 +200,16 @@ def start_game() -> None:
 
 def find_enemy_spawn() -> list:
     '''
-    Returns the coordinates for the enemy spawn point and the direction for enemy attack. \n Returns: [(spawnCoordinates), (spawnDirection)]
+    Returns the coordinates for the enemy spawn point and the direction for enemy attack. \n
+    Looks along the edge of the game config until the enemy spawn point.\n
+    Returns: [(spawnCoordinates), (spawnDirection)]
     '''
     data = []
 
     x = 0
     y = 0
     
-    for width in range(SCREEN_WIDTH-1):
+    for width in range(SCREEN_WIDTH - 1):
         pixelColor = screen.get_at((x, y))
 
         if pixelColor == SPAWN_COLOR:
@@ -208,7 +220,7 @@ def find_enemy_spawn() -> list:
         else:
             x += 1
 
-    for height in range(SCREEN_HEIGHT-1):
+    for height in range(SCREEN_HEIGHT - 1):
         pixelColor = screen.get_at((x, y))
 
         if pixelColor == SPAWN_COLOR:
@@ -219,7 +231,7 @@ def find_enemy_spawn() -> list:
         else:
             y += 1
         
-    for width in range(SCREEN_WIDTH-1):
+    for width in range(SCREEN_WIDTH - 1):
         pixelColor = screen.get_at((x, y))
 
         if pixelColor == SPAWN_COLOR:
@@ -230,7 +242,7 @@ def find_enemy_spawn() -> list:
         else:
             x -= 1
 
-    for height in range(SCREEN_HEIGHT-1):
+    for height in range(SCREEN_HEIGHT - 1):
         pixelColor = screen.get_at((x, y))
 
         if pixelColor == SPAWN_COLOR:
@@ -249,7 +261,8 @@ def find_enemy_spawn() -> list:
 
 def find_enemy_direction_points() -> list:
     '''
-    Returns all coordinates with direction change data.
+    Returns all coordinates with direction change data.\n
+    Looks for all pixels with data in the game map config.
     '''
     changeDirectionData = [[], [], [], []]  # [[up], [down], [left], [right]]
 
@@ -288,7 +301,7 @@ def read_map_data() -> list:
 
 
 def spawn_bullet(playerCoords: tuple, crosshairCoords:tuple) -> None:
-    ''' Creates a bullet at the player.'''
+    ''' Creates a bullet at the player facing the crosshair.'''
     global bulletsShot
 
     bulletsShot += 1
@@ -315,6 +328,7 @@ def create_enemy_attack(enemyType: object, ammountOfEnemies: int, delay: int) ->
     '''
     Spawns an enemy attack. One enemyType ammountOfEnemies nr of times with a delay time delay.
     '''
+    # Recursion -- spooky!
     def spawn_enemy(loop: int):
         x = mapData[0][0]
         y = mapData[0][1]
@@ -332,18 +346,18 @@ def create_enemy_attack(enemyType: object, ammountOfEnemies: int, delay: int) ->
 
 def generate_enemy_waves() -> list:
     '''
-    Generates waves of enemies.
+    Controls the enemy wave generation.
     '''
-    global wave, nextWave, isNextWaveScheduled
+    global wave, nextWave, isNextWaveScheduled, playerHp
 
-    # Shedules next wave attack.
+    # Shedule next wave attack
     if not isNextWaveScheduled and len( enemyList ) == 0:
         nextWave = gameTick + WAVE_COOLDOWN
         print("gameTick", gameTick, ", nextWave", nextWave)
 
         isNextWaveScheduled = True
 
-    # Creates next wave when it's time.
+    # Create next waves when it's time
     if gameTick == nextWave:
         if wave == 0:
             create_enemy_attack(Enemy1, 5, 500)
@@ -358,9 +372,64 @@ def generate_enemy_waves() -> list:
             create_enemy_attack(Enemy1, 8, 500)
             create_enemy_attack(Enemy2, 3, 800)
 
-        print("Wave", wave)
+        if wave == 4:
+            create_enemy_attack(Enemy1, 5, 500)
+            create_enemy_attack(Enemy2, 5, 800)
+            create_enemy_attack(Enemy3, 3, 600)
+
+        if wave == 5:
+            create_enemy_attack(Enemy3, 7, 600)
+            create_enemy_attack(Enemy4, 5, 500)
+
+        if wave == 6:
+            create_enemy_attack(Enemy3, 5, 500)
+            create_enemy_attack(Enemy4, 4, 600)
+            create_enemy_attack(Enemy5, 3, 700)
+
+        if wave == 7:
+            create_enemy_attack(Enemy6, 5, 600)
+            create_enemy_attack(Enemy4, 4, 650)
+            create_enemy_attack(Enemy5, 3, 700)
+
+        if wave == 8:
+            create_enemy_attack(Enemy6, 5, 600)
+            create_enemy_attack(Enemy7, 4, 650)
+            create_enemy_attack(Enemy5, 3, 700)
+
+        if wave == 9:
+            create_enemy_attack(Boss1, 1, 600)
+            create_enemy_attack(Enemy6, 5, 650)
+            create_enemy_attack(Enemy4, 10, 500)
+
+        if wave == 10:
+            create_enemy_attack(Boss1, 2, 600)
+            create_enemy_attack(Enemy4, 8, 650)
+            create_enemy_attack(Enemy5, 6, 700)
+
+        if wave == 11:
+            create_enemy_attack(Boss2, 1, 600)
+            create_enemy_attack(Enemy7, 4, 400)
+            create_enemy_attack(Enemy5, 3, 700)
+
+        if wave == 12:
+            create_enemy_attack(Boss2, 2, 1000)
+            create_enemy_attack(Enemy7, 4, 650)
+            create_enemy_attack(Enemy5, 10, 700)
+
+        if wave == 12:
+            create_enemy_attack(Boss3, 1, 1000)
+            create_enemy_attack(Enemy7, 4, 650)
+            create_enemy_attack(Enemy5, 3, 700)
+
+        # Ready the next wave
+        print("Next wave", wave)
         isNextWaveScheduled = False
         wave += 1
+
+        # Game won -- end game
+        if wave == 13:
+            print("Game finished")
+            playerHp = 0
 
 
 def detect_bullet_hit() -> None:
@@ -384,23 +453,26 @@ def detect_bullet_hit() -> None:
 
                     enemy.bulletCooldown.append(bullet.id)
 
+                # Remove enemy
                 if enemy.hp <= 0:
                     score += enemy.scoreReward
                     enemyList.remove(enemy)
                 
+                # Remove bullet
                 if bullet.pp <= 0:
                     bulletIndex = enemy.bulletCooldown.index(bullet.id)
                     enemy.bulletCooldown.pop(bulletIndex)
                     bulletList.remove(bullet)
             
             else:
+                # Clear bullet from enemies cooldown lists
                 if bullet.id in enemy.bulletCooldown:
                     bulletIndex = enemy.bulletCooldown.index(bullet.id)
                     enemy.bulletCooldown.pop(bulletIndex)
 
 
 def update_cursor() -> None:
-    ''' Moves the player crosshair to the mouse coordinates.'''
+    ''' Moves the player crosshair to the current mouse coordinates.'''
     mouseCoords = pygame.mouse.get_pos()
     crosshair.movement(mouseCoords)
     crosshair.draw_self()
@@ -412,8 +484,9 @@ def update_player() -> None:
     '''
     player.movement(keyHeldDown)
     player.draw_self()
-    player.draw_reload_bar(gameTick, reloadDoneBy)
+    player.draw_reload_bar(gameTick, reloadDoneBy, reloadSpeed)
 
+    # Draw upgrades feedback if possible
     if score >= UPGRADE_COST:
         if bulletPP <= MAX_BULLET_PP:
             player.draw_penetration_upgrade_feedback()
@@ -428,6 +501,7 @@ def update_enemies() -> None:
     '''
     global playerHp
     for enemy in enemyList:
+        # Look for new directions
         for i, directionPoints in enumerate(mapData[1]):
             for point in directionPoints:
                 distance = get_distance(enemy.x, enemy.y, point[0], point[1])
@@ -435,11 +509,13 @@ def update_enemies() -> None:
                     enemy.moveDirection = mapDirectionPoints[i]
                     break
 
+        # Hurt player if enemy completed the map
         if out_of_bounds_check(enemy.x, enemy.y):
             enemyList.remove(enemy)
             playerHp -= enemy.maxHp
             print("playerHp -", enemy.maxHp)
 
+        # Update the enemies
         enemy.movement()
         enemy.draw_self()
         enemy.draw_health_bar()
@@ -453,13 +529,14 @@ def update_bullets() -> None:
         bullet.update()
         bullet.draw_self()
 
+        # Remove bullet if out of bounds
         if out_of_bounds_check(bullet.x, bullet.y):
             bulletList.remove(bullet)
 
 
 def run_game() -> None:
     '''
-    Updates and draws screen all sprites on screen.
+    Does calculation for, updates, and draws all sprites on screen.
     '''
     global playerHp
 
@@ -471,16 +548,16 @@ def run_game() -> None:
     update_bullets()
     update_player()
     update_cursor()
-        
+    
     generate_enemy_waves()
 
-    # Draw pop flash
+    # Update and draw pop flash
     for popFlash in popFlashes:
-        popFlash.self_draw()
-        
         if popFlash.destructionTime <= gameTick:
             popFlashes.remove(popFlash)
 
+        popFlash.self_draw()
+        
     update_game_state_texts()
     
     if playerHp <= 0:
@@ -507,47 +584,52 @@ def end_game() -> None:
 def update_game_state_texts() -> None:
     '''
     Updates game state texts.
-    '''    
+    '''
+    # Set the game state texts
     scoreText = gameStateFont.render(f"Score: {score}", True, WHITE)
     playerHpText = gameStateFont.render(f"Health: {playerHp}", True, WHITE)
     waveText = gameStateFont.render(f"Wave: {wave}", True, WHITE)
 
+    # Draws the game state texts
     screenPaddingX = 10
 
     screen.blit(scoreText, (screenPaddingX, 5))
     screen.blit(playerHpText, (screenPaddingX, 35))
 
     waveTextX = SCREEN_WIDTH - waveText.get_width() - screenPaddingX
-    screen.blit(waveText, ( waveTextX, 5))
+
+    screen.blit(waveText, (waveTextX, 5))
 
 
 def request_reload_upgrade() -> None:
     '''
-    Checks if upgrading the reload speed is possible.
+    Upgrades the reload speed if all requirements are met.
     '''
     global reloadSpeed, score
 
     if score >= UPGRADE_COST:
         if reloadSpeed >= MIN_RELOAD_SPEED:
+            print("Reload speed upgraded from", reloadSpeed, "to", reloadSpeed - RELOAD_REDUCTION)
             score -= UPGRADE_COST
             reloadSpeed -= RELOAD_REDUCTION
 
 
 def request_bullet_pp_upgrade() -> None:
     '''
-    Checks if upgrading the bullet pp is possible.
+    Upgrades the bullet penetration if all requirements are met.
     '''
     global bulletPP, score
 
     if score >= UPGRADE_COST:
         if bulletPP <= MAX_BULLET_PP:
+            print("Bullet penetration upgraded from", bulletPP, "to", bulletPP + 1)
             score -= UPGRADE_COST
             bulletPP += 1
 
 
 def cheat_controls(inputKey: int):
     '''
-    Checks what secret chet key combination was clicked and runs the secret command.
+    Checks what secret cheat key combination is active, and if they are, runs the secret commands.
     '''
     # Give score
     global score
@@ -579,22 +661,6 @@ def cheat_controls(inputKey: int):
 
     elif inputKey == pygame.K_7:
         enemyList.append(Enemy7(x, y))
-
-    if False:
-    # TODO 1 boss should spawn every 30 seconds. The boss spawns should look like: this
-    # 1 nr1 
-    # 2 nr1 
-    # 3 nr1 
-    # 1 nr2
-    # 2 nr2
-    # 2 nr2, 1 nr1
-    # 2 nr2, 2 nr1
-    # 1 nr3
-    # 2 nr3
-    # 2 nr3, 2 nr1
-    # 2 nr3, 2 nr2, 2 nr1
-    # 1 nr 3
-        pass
 
     # Spawn bosses
     elif inputKey == pygame.K_8:
@@ -632,17 +698,18 @@ while appRunning:
         if event.type == pygame.QUIT:
             appRunning = False
 
-        # Send program close sygnal
         if event.type == pygame.KEYDOWN:
             if event.key in [pygame.K_DELETE, pygame.K_ESCAPE]:
                 appRunning = False
 
+        # In menu
         if isMenuActive:
             # Gives the menu button functionality
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 if buttonList[0].background.collidepoint(event.pos):
                     start_game()
 
+        # In game session
         else:
             # Checks for bullet shoot key
             if event.type == pygame.MOUSEBUTTONDOWN:
@@ -656,7 +723,6 @@ while appRunning:
                     request_reload_upgrade()
 
                 if event.key == pygame.K_p:
-                    print("p")
                     request_bullet_pp_upgrade()
 
                 # Checks for cheat keys
