@@ -28,10 +28,14 @@ gameOverSound = pygame.mixer.Sound('sounds/gameOver.wav')
 # Init fonts
 gameStateFont = pygame.font.SysFont("Consolas", 30)
 menuTitleFont = pygame.font.SysFont("freesansbold", 64)
+menuTipFont = pygame.font.SysFont("freesansbold", 24)
 
 # Init menu texts
 menuTitleText = menuTitleFont.render("Ball-Game", True, BLACK)
 menuGameOverText = menuTitleFont.render("Game Over", True, BLACK)
+
+menuTipText1 = menuTipFont.render("", True, BLACK)
+menuTipText2 = menuTipFont.render("", True, BLACK)
 
 # Init globar variables
 buttonList = [ ]
@@ -138,10 +142,31 @@ def draw_menu() -> None:
     screen.fill(WHITE)
     screen.blit(menuTitleText, menuTitleTextCoordinates)
 
+    # Since the tip messages are long they will generate over multiple instances.
+    tipMessage1 = ["Tip: pressing \"O\" when there's a green bar on the reload bar", "when you gained 20 or more points will decrese your reload speed!"]
+    tipMessage2 = ["Tip: pressing \"P\" when there's a blue bar on the reload bar when you gave", "gained more than 20 points will increse your bullets penetration points."]
+
+    # The ones further right will be drawn higher up.
+    tipMessages = [tipMessage1, tipMessage2]
+
+    rowSpacing = 35
+    padding = 90
+    textY = SCREEN_HEIGHT - padding
+
+    # Draws the messages from te bottom of the screen up.
+    for tipMessage in tipMessages:
+        for messagePart in tipMessage:
+            menuTipText = menuTipFont.render(messagePart, True, BLACK)
+            x = center("x", menuTipText)
+            textY -=  menuTipText.get_height() - rowSpacing
+            screen.blit(menuTipText, (x, textY))
+
+        textY -= padding
+        
+
     if playerHp == 0:
         screen.blit(menuGameOverText, menuGameOverTextCoordinates)
 
-    
     for button in buttonList:
         button.blit_self()
 
@@ -310,6 +335,7 @@ def generate_waves() -> list:
     # if no enemies left:
     # schedule next wave in 10 sec
     # TODO: COME UP WITH HOW DO THE WAVES LOOK LIKE YOU PROCRASTINATING DUMMY!
+    pass
 
 
 def detect_bullet_hit() -> None:
