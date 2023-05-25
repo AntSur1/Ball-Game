@@ -6,7 +6,6 @@ pygame.font.init()
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 buttonFont = pygame.font.SysFont("freesansbold", 42)
 
-
 # Functions
 def calculate_angle(coordinates1: tuple, coordinates2: tuple) -> float:
     '''
@@ -221,13 +220,13 @@ class Bullet(object):
         self.bulletAngle = math.atan2(self.ty - self.y, self.tx - self.x)
         self.id = bulletID
 
-        # Spawn a new bullet
+        # Create surface
         self.surface = pygame.Surface((self.width, self.height))
         self.surface.set_colorkey((0, 0, 0))
         self.surface.fill(self.color)
         self.rect = self.surface.get_rect()
 
-        # Rotate the bullet
+        # Rotate the surface
         oldCenter = self.rect.center
         self.newSurface = pygame.transform.rotate(self.surface, self.spawnAngle)
         self.rect = self.newSurface.get_rect()
@@ -247,7 +246,7 @@ class Bullet(object):
         screen.blit(self.newSurface, self.rect)
 
 
-class Pop_Flash(object):
+class Hit_flash(object):
     '''
     Creates a shortlived enemy hit effect.
     '''
@@ -361,7 +360,7 @@ class Enemy3(Enemy):
         self.speed = 1
         self.maxHp = 3
         self.hp = self.maxHp
-        self.scoreReward = 3
+        self.scoreReward = 4
 
 
 class Enemy4(Enemy):
