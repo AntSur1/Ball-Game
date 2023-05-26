@@ -329,6 +329,7 @@ def create_enemy_attack(enemyType: object, ammountOfEnemies: int, delay: int) ->
     Spawns an enemy attack. One enemyType ammountOfEnemies nr of times with a delay time delay.
     '''
     # Recursion -- spooky!
+    # You.com/chat gave me this function.
     def spawn_enemy(loop: int):
         x = mapData[0][0]
         y = mapData[0][1]
