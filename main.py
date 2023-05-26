@@ -152,7 +152,7 @@ def draw_menu() -> None:
     screen.fill(WHITE)
     screen.blit(menuTitleText, menuTitleTextCoords)
 
-    if playerHp == 0:
+    if playerHp <= 0:
         if isGameWon:
             screen.blit(youWonText, youWonTextCoords)
 
