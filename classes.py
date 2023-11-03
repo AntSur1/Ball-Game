@@ -92,7 +92,7 @@ class Crosshair(object):
 
 class Dot(object):
     '''
-    Creates a bace entity.
+    Creates a base entity.
     '''
     def __init__(self, coordinates: tuple, radius: int = 0, color: int = BLACK) -> None:
         self.x, self.y = coordinates
