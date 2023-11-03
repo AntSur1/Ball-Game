@@ -152,7 +152,7 @@ def draw_menu() -> None:
     screen.fill(WHITE)
     screen.blit(menuTitleText, menuTitleTextCoords)
 
-    if playerHp == 0:
+    if playerHp <= 0:
         if isGameWon:
             screen.blit(youWonText, youWonTextCoords)
 
@@ -329,6 +329,7 @@ def create_enemy_attack(enemyType: object, ammountOfEnemies: int, delay: int) ->
     Spawns an enemy attack. One enemyType ammountOfEnemies nr of times with a delay time delay.
     '''
     # Recursion -- spooky!
+    # You.com/chat suggested using the threading timer after I asked it: "Why does this code crash my program." (Then I showed some faulty code that created an infinite loop.)
     def spawn_enemy(loop: int):
         x = mapData[0][0]
         y = mapData[0][1]
@@ -448,7 +449,7 @@ def detect_bullet_hit() -> None:
                     enemy.hp -= 1
                     bullet.pp -= 1
 
-                    popFlashes.append(Pop_Flash((bullet.x, bullet.y), gameTick))
+                    popFlashes.append(Hit_flash((bullet.x, bullet.y), gameTick))
                     enemyHitSound.play()
 
                     enemy.bulletCooldown.append(bullet.id)
@@ -534,6 +535,32 @@ def update_bullets() -> None:
             bulletList.remove(bullet)
 
 
+def request_reload_upgrade() -> None:
+    '''
+    Upgrades the reload speed if all requirements are met.
+    '''
+    global reloadSpeed, score
+
+    if score >= UPGRADE_COST:
+        if reloadSpeed >= MIN_RELOAD_SPEED:
+            print("Reload speed upgraded from", reloadSpeed, "to", reloadSpeed - RELOAD_REDUCTION)
+            score -= UPGRADE_COST
+            reloadSpeed -= RELOAD_REDUCTION
+
+
+def request_bullet_pp_upgrade() -> None:
+    '''
+    Upgrades the bullet penetration if all requirements are met.
+    '''
+    global bulletPP, score
+
+    if score >= UPGRADE_COST:
+        if bulletPP <= MAX_BULLET_PP:
+            print("Bullet penetration upgraded from", bulletPP, "to", bulletPP + 1)
+            score -= UPGRADE_COST
+            bulletPP += 1
+
+
 def run_game() -> None:
     '''
     Does calculation for, updates, and draws all sprites on screen.
@@ -599,32 +626,6 @@ def update_game_state_texts() -> None:
     waveTextX = SCREEN_WIDTH - waveText.get_width() - screenPaddingX
 
     screen.blit(waveText, (waveTextX, 5))
-
-
-def request_reload_upgrade() -> None:
-    '''
-    Upgrades the reload speed if all requirements are met.
-    '''
-    global reloadSpeed, score
-
-    if score >= UPGRADE_COST:
-        if reloadSpeed >= MIN_RELOAD_SPEED:
-            print("Reload speed upgraded from", reloadSpeed, "to", reloadSpeed - RELOAD_REDUCTION)
-            score -= UPGRADE_COST
-            reloadSpeed -= RELOAD_REDUCTION
-
-
-def request_bullet_pp_upgrade() -> None:
-    '''
-    Upgrades the bullet penetration if all requirements are met.
-    '''
-    global bulletPP, score
-
-    if score >= UPGRADE_COST:
-        if bulletPP <= MAX_BULLET_PP:
-            print("Bullet penetration upgraded from", bulletPP, "to", bulletPP + 1)
-            score -= UPGRADE_COST
-            bulletPP += 1
 
 
 def cheat_controls(inputKey: int):
